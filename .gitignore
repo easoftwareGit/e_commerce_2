@@ -1,3 +1,4 @@
 /server/node_modules
 /server/db/images
 /server/.env
+/server/db/testData/ikea.zip
