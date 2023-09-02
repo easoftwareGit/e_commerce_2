@@ -1,4 +1,7 @@
 /server/node_modules
+/client/node_modules
 /server/db/images
 /server/.env
 /server/db/testData/ikea.zip
+/client/.env
+/client/public/other_images

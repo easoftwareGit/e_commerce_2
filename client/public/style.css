@@ -1,0 +1,14 @@
+/* .nav-pills values are for header menu */
+.nav-pills > li > a {
+  color: #ffffff !important;
+  font-weight: 600;
+}
+
+.nav-pills > li > a:hover {
+  color: #bbbbbb !important;
+}
+
+.nav-pills > li > a.active {
+  color: #0275d8 !important;
+  background-color: #ffffff !important;
+} 
