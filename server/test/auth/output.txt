@@ -1,0 +1,50 @@
+---- vvvv   node app.js   vvvv ----
+passport.initialize()
+passport.session()
+Server is listening on port: 4001
+---- ^^^^   node app.js   ^^^^ ----
+
+
+---- vvvv   refresh browser on root path   vvvv ----
+app.get("/")
+user: undefined
+---- ^^^^   refresh browser on root path   ^^^^ ----
+
+
+---- vvvv   user clicked [login]   vvvv ----
+router.get("/login")
+---- ^^^^   user clicked [login]   ^^^^ ----
+
+
+---- vvvv   user logged in   vvvv ----
+new LocalStrategy(function ())
+    ---- vvvv   helper.findByUsername()   vvvv ----
+Username with username sam found!
+{"id":6,"username":"sam","password":"$2b$10$ZSSOJP040PO2FuxNGITBE.U2/CQPli/TJgDZV9Zn/Hs96VlSo3mae"}
+    ---- ^^^^   helper.findByUsername()   ^^^^ ----
+matched username and password for user: sam
+serializeUser - userId: 6
+logged in!
+deserializeUser 1
+deserializeUser 2
+deserializeUser - userId: 6
+app.get("/")
+user: [object Object]
+---- ^^^^   user logged in   ^^^^ ----
+
+---- vvvv   user logged out   vvvv ----
+deserializeUser 1
+deserializeUser 2
+deserializeUser - userId: 6
+router.get("/logout") 1
+user: [object Object]
+logged out!
+user: null
+router.get("/logout") 2
+user: null
+app.get("/")
+user: undefined
+---- ^^^^   user logged out   ^^^^ ----
+
+
+write a javascript log in using passport
