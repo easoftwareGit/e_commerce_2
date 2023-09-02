@@ -14,7 +14,6 @@ import Home from './components/Home';
 
 import './App.css';
 
-require("dotenv").config();
 const rootStart = process.env.REACT_APP_DEVROOT;
 const pgHost = process.env.REACT_APP_PGHOST;
 const serverPort = process.env.REACT_APP_SERVER_PORT;
