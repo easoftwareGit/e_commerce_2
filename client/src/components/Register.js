@@ -95,7 +95,7 @@ const Register = props => {
       errors.password = 'Password is required';
       isValid = false;
     } else if (!string.validate.isPassword8to15(formData.password)) {
-      errors.password = 'Password not in a valid format: at least 1 lower case, 1 UPPER case, 1 digit, 1 special character';
+      errors.password = 'Password not in a valid format: at least 1 lower case, 1 UPPER case, 1 digit, 1 special character, 8 to 15 charaters long';
       isValid = false;
     } else {
       errors.password = '';
@@ -106,7 +106,7 @@ const Register = props => {
       errors.confirm = 'Confirm password is required';
       isValid = false;
     } else if (!string.validate.isPassword8to15(formData.confirm)) {
-      errors.confirm = 'Password not in a valid format: at least 1 lower case, 1 UPPER case, 1 digit, 1 special character';
+      errors.confirm = 'Password not in a valid format: at least 1 lower case, 1 UPPER case, 1 digit, 1 special character, 8 to 15 charaters long';
       isValid = false;
     } else {
       errors.confirm = '';
@@ -164,9 +164,19 @@ const Register = props => {
           showRegisteredMenu();
           setActiveMenuItem(homeId);
         } else if (response.status === 409) {
+          // setFormErrors({
+          //   ...formErrors,
+          //   email: "Email has been already used",
+          //   confirm: ""
+          // });
+          // if got here, then only error is email has been used
           setFormErrors({
-            ...formErrors,
-            email: "Email has been already used"
+            first_name: "",
+            last_name: "",
+            phone: "",
+            email: "Email has been already used",
+            password: "",
+            confirm: ""
           });
           showModal("Invalid Data", "Email has been already used");          
         } else {
