@@ -63,11 +63,6 @@ const LogIn = props => {
     return isValid;
   }
 
-  const googleButtonClicked = () => {
-    // showModal("Information", "Google login button clicked");
-    navigate('http://localhost:5000/api/auth/google');
-  }
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -125,105 +120,10 @@ const LogIn = props => {
           showModal("Internal Error", "Something went wrong");
         }          
       }
-
-      // axios({
-      //   method: "post",
-      //   data: {
-      //     email: sanitized.email,
-      //     password: formData.password
-      //   },
-      //   withCredentials: true,
-      //   url: `${baseApi}/auth/login`,
-      // })
-      // .then((res) => {
-      //   // successfull login
-      //   navigate('/products'); 
-      //   showRegisteredMenu();
-      //   setActiveMenuItem(homeId);
-      // })
-      // .catch((err) => {
-      //   if (err.code === 'ERR_NETWORK') {
-      //     showModal("Network Error", "Could not connect to the network");
-      //   }
-      //   else if (err.response.status === 401) {
-      //     showModal("Invalid Data", "Incorrect email or password");
-      //   } else if (err.response.status === 500) {
-      //     showModal("Internal Error", err.response.data.message);
-      //   } else {
-      //     const errCode = err.response.status ? err.response.status : 'unknown'
-      //     const errMsg = err.response.data.message ? err.response.data.message : 'Unknown error'
-      //     showModal("Internal Error", `${errMsg} with code: ${errCode}`);
-      //   }
-      // })
-
     } else {  
       showModal("Invalid Data", "Login data is invalid. Enter valid data to login.");
     }
   }
-  
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   if (validateForm()) {
-  //     try {  
-  //       const loginHeaders = new Headers();
-  //       loginHeaders.append('Content-Type', 'application/json');
-  //       loginHeaders.append('Cookie', 'connect.sid=s%3ArUVC-CnX8M3LF7zpFPLnAWuVnKbwB8aG.DbZuK8JyHlxL%2BCWXIs1lY5TWjHMKAezg5OKe51ugvQk');
-  //       const loginBody = JSON.stringify({
-  //         email: sanitized.email,
-  //         password: formData.password
-  //       });
-  //       const response = await fetch(`${baseApi}/auth/login`, { 
-  //         method: "POST",
-  //         headers: loginHeaders,    
-  //         body: loginBody,
-  //         redirect: 'follow',
-  //         credentials: "include"          
-  //       });
-  //       // successfull login
-  //       if (response.status === 200) {
-  //         // navigate back to home page
-  //         navigate('/products');          
-  //         showRegisteredMenu();
-  //         setActiveMenuItem(homeId);
-  //       } else if (response.status === 401) {
-  //         showModal("Invalid Data", "Incorrect email or password");
-  //       } else {
-  //         console.error('Login request failed with status:', response.status);
-  //       } 
-
-
-  //       // using 
-  //       // passport.authenticate('local', {successRedirect: '/products', failureRedirect: '/login', })
-  //       //
-  //       // const response = await fetch(`${baseApi}/auth/login`, { 
-  //       //   method: "POST",
-  //       //   headers: loginHeaders,    
-  //       //   body: loginBody,
-  //       //   redirect: 'follow'
-  //       // });
-  //       // // successfull login
-  //       // const loggedInRedirectEnd = "/products"
-  //       // const failRedirectEnd = "/login"
-  //       // if (response.url.endsWith(loggedInRedirectEnd)) {
-  //       //   // navigate back to home page
-  //       //   navigate(loggedInRedirectEnd);          
-  //       //   showRegisteredMenu();
-  //       //   setActiveMenuItem(homeId);
-  //       // } else if (response.url.endsWith(failRedirectEnd)) {
-  //       //   showModal("Invalid Data", "Incorrect email or password");
-  //       // } else {
-  //       //   console.error('Login request failed with status:', response.status);
-  //       // } 
-
-
-
-  //     } catch (err) {
-  //       console.error(err.message);
-  //     }
-  //   } else {  
-  //     showModal("Invalid Data", "Login data is invalid. Enter valid data to login.");
-  //   }
-  // }  
 
   const showModal = (title, message) => {    
     setModalInfo({
@@ -295,24 +195,25 @@ const LogIn = props => {
           <button type="submit" id="btnSubmit" class="btn btn-primary me-3">
             Log In
           </button>
-          <button
-            type="button"
-            id="btnGoogle"
-            class="btn btn-secondary"
-            onClick={googleButtonClicked}
-          >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            fill="currentColor"
-            class="bi bi-google"
-            viewBox="0 0 16 16"
-          >
-            <path d="M15.545 6.558a9.42 9.42 0 0 1 .139 1.626c0 2.434-.87 4.492-2.384 5.885h.002C11.978 15.292 10.158 16 8 16A8 8 0 1 1 8 0a7.689 7.689 0 0 1 5.352 2.082l-2.284 2.284A4.347 4.347 0 0 0 8 3.166c-2.087 0-3.86 1.408-4.492 3.304a4.792 4.792 0 0 0 0 3.063h.003c.635 1.893 2.405 3.301 4.492 3.301 1.078 0 2.004-.276 2.722-.764h-.003a3.702 3.702 0 0 0 1.599-2.431H8v-3.08h7.545z" />
-          </svg>{" "}
-            Log in with Google
-          </button>
+          <a href={`${baseApi}/auth/google`}>
+            <button
+              type="button"
+              id="btnGoogle"
+              class="btn btn-secondary"              
+            >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              fill="currentColor"
+              class="bi bi-google"
+              viewBox="0 0 16 16"
+            >
+              <path d="M15.545 6.558a9.42 9.42 0 0 1 .139 1.626c0 2.434-.87 4.492-2.384 5.885h.002C11.978 15.292 10.158 16 8 16A8 8 0 1 1 8 0a7.689 7.689 0 0 1 5.352 2.082l-2.284 2.284A4.347 4.347 0 0 0 8 3.166c-2.087 0-3.86 1.408-4.492 3.304a4.792 4.792 0 0 0 0 3.063h.003c.635 1.893 2.405 3.301 4.492 3.301 1.078 0 2.004-.276 2.722-.764h-.003a3.702 3.702 0 0 0 1.599-2.431H8v-3.08h7.545z" />
+            </svg>{" "}
+              Log in with Google
+            </button>
+          </a>
         </div>
       </form>
     </div>

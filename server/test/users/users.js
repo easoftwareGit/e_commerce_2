@@ -1,6 +1,7 @@
 const expect = require('chai').expect;
 const request = require('supertest');
 const db = require('../../db/db');
+const { createGoogleUser } = require('../../db/userQueries');
 
 const dbTools = require('../../db/dbTools');
 const { assert } = require('chai');
@@ -20,6 +21,7 @@ const {
   orderItemsTableName
 } = require('../myConsts');
 const { findUserByEmail, findUserByGoogleId } = require('../../db/userQueries');
+const { afterEach } = require('mocha');
 
 require("dotenv").config();
 const baseUrl = `${process.env.BASEURL}/users`; 
@@ -482,7 +484,7 @@ function testUsers(app) {
         await db.query(resetSqlCommand);
       });
 
-      after('after last POST test', async function() {
+      afterEach('after last POST test', async function() {
         await db.query(resetSqlCommand);
       });
 
@@ -498,8 +500,19 @@ function testUsers(app) {
         assert.equal(postedUser.last_name, newUser.last_name);
         assert.equal(postedUser.phone, null);
         assert.equal(postedUser.google, newUser.google);
-      });
+      });      
         
+      it('create a google user via createGoogleUser()', async function () {
+        const userRow = await createGoogleUser(newUser);
+        expect(userRow).to.be.an.instanceOf(Object);
+        assert.equal(userRow.email, newUser.email);
+        assert.equal(userRow.password_hash, null);
+        assert.equal(userRow.first_name, newUser.first_name);
+        assert.equal(userRow.last_name, newUser.last_name);
+        assert.equal(userRow.phone, null);
+        assert.equal(userRow.google, newUser.google);
+      });
+
     });
   
     describe(`PUT ${baseUrl}/:guid (no google)`, function() {
@@ -567,7 +580,7 @@ function testUsers(app) {
           return request(app)
             .put(`${baseUrl}/${putUserGuid}`)
             .send(duplicateUser)
-            .expect(400)
+            .expect(404)
         });
 
         // all missing data paths tested in /POST section
@@ -578,7 +591,7 @@ function testUsers(app) {
           return request(app)
             .put(`${baseUrl}/${putUserGuid}`)
             .send(missingDataUser)
-            .expect(400)
+            .expect(404)
         });
       });
   

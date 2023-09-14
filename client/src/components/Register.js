@@ -10,7 +10,7 @@ const { phone } = require('phone');
 
 const Register = props => {
 
-  const { baseApi, setActiveMenuItem, showRegisteredMenu} = props;
+  const { baseApi, setActiveMenuItem} = props;
   
   const navigate = useNavigate()
 
@@ -151,7 +151,6 @@ const Register = props => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateForm()) {
-
       try {
         const response = await axios({
           method: "post",
@@ -202,75 +201,6 @@ const Register = props => {
           showModal("Internal Error", "Something went wrong");
         }
       }
-
-      // axios({
-      //   method: "post",
-      //   data: {
-      //     first_name: sanitized.first_name,
-      //     last_name: sanitized.last_name,
-      //     email: sanitized.email,
-      //     phone: sanitized.phone,
-      //     password: formData.password
-      //   },
-      //   withCredentials: true,
-      //   url: `${baseApi}/auth/register`
-      // })
-      // .then((res) => {
-      //   // successfull login
-      //   navigate('/');         
-      //   setActiveMenuItem(homeId);
-      // })
-      // .catch((err) => {
-      //   if (err.response.status === 400) {
-      //     setFormErrors({
-      //       first_name: "",
-      //       last_name: "",
-      //       phone: "",
-      //       email: "Email has been already used",
-      //       password: "",
-      //       confirm: ""
-      //     });
-      //     showModal("Invalid Data", "Email has already been used");
-      //   } else {
-      //     const errCode = err.response.status ? err.response.status : 'unknown'
-      //     const errMsg = err.response.data.message ? err.response.data.message : 'Unknown error'
-      //     showModal("Internal Error", `${errMsg} with code: ${errCode}`);
-      //     console.error('Register request failed with status:', errCode);
-      //   }
-      // })
-
-
-      // try { 
-      //   const response = await fetch(`${baseApi}/auth/register`, {        
-      //     method: "POST",
-      //     headers: { 'Content-Type': 'application/json' },
-      //     body: JSON.stringify(sanitized)
-      //   });
-
-      //   // successfull register
-      //   if (response.status === 200) {
-      //     // navigate back to home page
-      //     navigate('/');          
-      //     showRegisteredMenu();
-      //     setActiveMenuItem(homeId);
-      //   } else if (response.status === 409) {
-      //     // if got here, then only error is email has been used
-      //     setFormErrors({
-      //       first_name: "",
-      //       last_name: "",
-      //       phone: "",
-      //       email: "Email has been already used",
-      //       password: "",
-      //       confirm: ""
-      //     });
-      //     showModal("Invalid Data", "Email has been already used");          
-      //   } else {
-      //     console.error('Register request failed with status:', response.status);
-      //   }        
-      // } catch (err) {
-      //   console.error(err.message);
-      // }
-
     } else {  
       showModal("Invalid Data", "Registration data is invalid. Enter valid data to register.");
     }

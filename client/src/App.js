@@ -176,8 +176,7 @@ function App() {
           element={
             <Register
               baseApi={baseApi}
-              setActiveMenuItem={setActiveMenuItem}
-              showRegisteredMenu={showRegisteredMenu}
+              setActiveMenuItem={setActiveMenuItem}              
             />
           }
         />

@@ -2,7 +2,7 @@ const express = require('express');
 const usersRouter = express.Router();
 const db = require('../db/db');
 const { validateGuid } = require('./guidRegEx');
-const { findUserByGuid } = require('../db/userQueries');
+const { findUserByGuid, updateUser } = require('../db/userQueries');
 
 /**
  * checks guid param,sets req.guid if guid param valid, else sets error
@@ -74,6 +74,8 @@ usersRouter.post('/', async (req, res) => {
   //    "phone": "(800) 555-1234",
   //    "google": "1234567890"
   //  }
+  // 
+  // note: only used in testing. to create a user, post to /api/auth/register
   
   const { email, password_hash, first_name, last_name, phone, google } = req.body;
   const rowValues = [email, password_hash, first_name, last_name, phone, google];
@@ -111,6 +113,9 @@ usersRouter.post('/google', async (req, res) => {
   //    "phone": null
   //    "google": "1234567890"
   //  }
+  //
+  // note: only used in testing. to created a google user, 
+  //  use passport.use(new GoogleStrategy({ ... }) in passportConfig.js
   
   const { email, first_name, last_name, google } = req.body;
   const rowValues = [email, first_name, last_name, google];
@@ -150,25 +155,13 @@ usersRouter.put('/:guid', async (req, res) => {
   //    "google": "1234567890"
   //  }
      
-  const { email, password_hash, first_name, last_name, phone, google } = req.body;
-  const rowValues = [email, password_hash, first_name, last_name, phone, google, req.guid];
-  const sqlCommand = `
-    UPDATE users
-    SET email = $1, 
-        password_hash = $2, 
-        first_name = $3, 
-        last_name = $4, 
-        phone = $5,
-        google = $6
-    WHERE guid = $7
-    RETURNING *;`;
   try {
-    const results = await db.query(sqlCommand, rowValues);
-    if (db.validResultsAtLeast1Row(results)) {
-      res.status(200).send(results.rows[0]);      
-    } else {      
-      res.status(404).send(`User not found`);
-    };
+    const userRow = await updateUser(req.body);
+    if (userRow) {
+      res.status(200).json(userRow);
+    } else {
+      res.status(404).json('User not found');
+    }      
   } catch (err) {
     if (err.code === '23505') {
       res.status(400).json('email already used');
@@ -176,7 +169,7 @@ usersRouter.put('/:guid', async (req, res) => {
       res.status(400).json('required value missing');
     } else {
       throw Error(err);
-    }    
+    }        
   }
 });
 

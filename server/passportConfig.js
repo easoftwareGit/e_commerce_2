@@ -58,7 +58,7 @@ module.exports = function (passport) {
         user = await userQuery.createGoogleUser(googleUser);
         if (!user) {          
           throw Error('Could not create user');
-        }        
+        }
       }
       return done(null, user); 
     }

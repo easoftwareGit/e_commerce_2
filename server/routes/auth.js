@@ -119,23 +119,42 @@ authRouter.get('/profile', isLoggedIn, (req, res) => {
 });
 
 authRouter.get('/is_logged_in', isLoggedIn, (req, res) => {
+
+  // GET request - check if user is logged in
+  // path: localhost:5000/auth/is_logged_in
+  // body: not used
+  // this path uses passport LocalStrategy (see main index.js)
+
   res.status(200).send("User logged in")
 });
 
-authRouter.get('/login', (req, res) => {
-  res.send('Login Page');
+// authRouter.get('/login', (req, res) => {
+//   res.send('Login Page');
+// });
+
+authRouter.get('/user', (req, res) => { 
+
+  // GET request - gets the currenly logged in user
+  // path: localhost:5000/auth/user
+  // body: not used
+  // this path uses passport LocalStrategy (see main index.js)
+
+  res.send(req.user);  // req.user stores the entire user that has been authenticated
 });
 
-// authRouter.get('/google',
-//   passport.authenticate('google', { scope: ['email', 'profile'] })
-// );
+// GOOGLE log in
 
+authRouter.get('/google',
+  passport.authenticate('google', { scope: ['email', 'profile'] })
+);
+
+// /google/callback located in index.js,
+// so it does not have /api/auth in route
 // authRouter.get('/google/callback',
 //   passport.authenticate('google', {
-//     successRedirect: '/protected',
+//     successRedirect: '/products',
 //     failureRedirect: '/login'
 //   })
 // );
-
 
 module.exports = authRouter;

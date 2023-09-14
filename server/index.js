@@ -49,6 +49,15 @@ app.use(`${baseUrl}/products`, productsRouter);
 app.use(`${baseUrl}/carts`, cartsRouter);
 app.use(`${baseUrl}/orders`, ordersRouter);
 
+// google router call back
+app.get('/google/callback',
+  passport.authenticate('google', {
+    session: true,
+    successRedirect: `${clientOrigin}/products`,
+    failureRedirect: `${clientOrigin}/login`
+  })
+);
+
 app.listen(port, () => {
   console.log(`App listening on port ${port}`)
 });

@@ -98,9 +98,66 @@ async function createUser(data) {
   }
 };
 
+/**
+ * updates a user record
+ *
+ * @param {object} data - JSon object of user's data.
+ * @return {object} - JSon object of user's data; null - could not update
+ */
+async function updateUser(data) {
+  try {
+    const { guid, email, password_hash, first_name, last_name, phone, google } = data;
+    const rowValues = [email, password_hash, first_name, last_name, phone, google, guid];
+    const sqlCommand = `
+      UPDATE users
+      SET email = $1, 
+          password_hash = $2, 
+          first_name = $3, 
+          last_name = $4, 
+          phone = $5,
+          google = $6
+      WHERE guid = $7
+      RETURNING *;`;  
+      const results = await db.query(sqlCommand, rowValues);
+      if (db.validResultsAtLeast1Row(results)) {
+        return results.rows[0];
+      } else {      
+        return null;
+      }; 
+  } catch (err) {
+    throw Error(err)
+  }
+}
+
+/**
+ * creates a new user record
+ *
+ * @param {Object} data - JSon object of user's data. NOTE: plain text password is in JSon object
+ * @return {Object} JSon object of user's data. NOTE: password_hash is in returned JSon object; null - could not update
+ */
+async function createGoogleUser(data) {
+  try {
+    const { email, password_hash, first_name, last_name, phone, google } = data;
+    const sqlCommand = `
+      INSERT INTO users (email, password_hash, first_name, last_name, phone, google) 
+      VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;`;
+    const rowValues = [email, password_hash, first_name, last_name, phone, google];
+    const results = await db.query(sqlCommand, rowValues);
+    if (db.validResultsAtLeast1Row(results)) {
+      return results.rows[0];
+    } else {
+      return null;
+    }
+  } catch (err) {
+    throw Error(err)
+  }
+};
+
 module.exports = { 
   findUserByEmail, 
   findUserByGuid,
   findUserByGoogleId,
-  createUser
+  createUser,
+  updateUser,
+  createGoogleUser
 }

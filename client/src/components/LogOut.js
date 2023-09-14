@@ -27,9 +27,6 @@ const LogOut = props => {
 
   const logoutUser = async () => {
     const loggedOutEnd = "/login"
-
-    // const response = await fetch(`${baseApi}/auth/logout`)
-
     try {
       const response = await axios({
         method: 'get',
@@ -53,30 +50,7 @@ const LogOut = props => {
         console.log('Logout - unknown error')
       }
       showModal("Internal Error", "Something went wrong");  
-    }
-
-    // const response = await fetch(`${baseApi}/auth/logout`, {
-    //   method: "GET",
-    //   headers: {
-    //     'Accept': 'application/json',
-    //     'Content-Type': 'application/json',
-    //   },
-    //   credentials: 'include'
-    // });
-
-    // try {
-    //   if (response.url.endsWith(loggedOutEnd)) {
-    //     navigate(loggedOutEnd);
-    //     showNotRegisteredMenu();
-    //     setActiveMenuItem(loginId);
-    //   } else {
-    //     showModal("Server error", "Cound not logout");
-    //     console.error('Logout request failed with status:', response.status);
-    //   }
-    // } catch (err) {
-    //   console.error(err.message);
-    // }
-    
+    }    
   }
 
   useEffect(() => {
