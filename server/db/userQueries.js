@@ -1,4 +1,4 @@
-const db = require('../db/db');
+const db = require('./db');
 const bcrypt = require('bcrypt');
 
 // from https://stackoverflow.com/questions/46155/how-can-i-validate-an-email-address-in-javascript
@@ -54,11 +54,11 @@ async function findUserByGuid(guid) {
 /**
  * finds one user by searching for a matching google id
  *
- * @param {JSON} id
+ * @param {String} id
  * @return {Object|null} Object = User's data; mull = user not found
  */
 async function findUserByGoogleId(id) {
-  const sqlCommand = `SELECT * FROM users WHERE goggle = $1;`;
+  const sqlCommand = `SELECT * FROM users WHERE google = $1;`;
   try {
     const results = await db.query(sqlCommand, [id]);
     if (db.validResultsAtLeast1Row(results)) {

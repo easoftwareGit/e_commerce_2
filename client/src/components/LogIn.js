@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { homeId } from './MenuItems';
 import { Modal } from 'bootstrap';
 import ModalMsg from './ModalMsg';
@@ -82,44 +83,149 @@ const LogIn = props => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validateForm()) {
-      try { 
-        const loginBody = {
-          email: sanitized.email,
-          password: formData.password
-        }
-        const response = await fetch(`${baseApi}/auth/login`, {        
-          method: "POST",
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-          },           
-          body: JSON.stringify(loginBody)          
-        });
+    if (validateForm()) { 
 
-        // successfull login
-        const loggedInRedirectEnd = "/products"
-        const failRedirectEnd = "/login"
-        if (response.url.endsWith(loggedInRedirectEnd)) {
-          // navigate back to home page
-          navigate(loggedInRedirectEnd);          
+      try {
+        const response = await axios({
+          method: "post",
+          data: {
+            email: sanitized.email,
+            password: formData.password
+          },
+          withCredentials: true,
+          url: `${baseApi}/auth/login`,
+        });
+        if (response.status === 200) {
+          // successfull login
+          navigate('/products'); 
           showRegisteredMenu();
-          setActiveMenuItem(homeId);
-        } else if (response.url.endsWith(failRedirectEnd)) {
-          showModal("Invalid Data", "Incorrect email or password");
+          setActiveMenuItem(homeId);  
         } else {
-          console.error('Login request failed with status:', response.status);
-        }        
+          console.log('Login - Non error return, but not status 200');
+          showModal("Internal Error", "Something went wrong");          
+        }
       } catch (err) {
-        console.error(err.message);
+        if (err.response && err.response.status && err.response.data && err.response.data.message) {
+          if (err.response.status === 401) {
+            showModal("Invalid Data", "Incorrect email or password")
+          } else if (err.response.status === 500) {
+            showModal("Internal Error", err.response.data.message)
+          } else { 
+            console.log(err.response.data.message)
+            showModal("Internal Error", "Something went wrong");            
+          }
+        } else {
+          if (err.message) {
+            console.log(err.message)
+          } else if (err.response.data.message) {
+            console.log(err.response.data.message)
+          } else {
+            console.log('Login - unknown error')
+          }
+          showModal("Internal Error", "Something went wrong");
+        }          
       }
+
+      // axios({
+      //   method: "post",
+      //   data: {
+      //     email: sanitized.email,
+      //     password: formData.password
+      //   },
+      //   withCredentials: true,
+      //   url: `${baseApi}/auth/login`,
+      // })
+      // .then((res) => {
+      //   // successfull login
+      //   navigate('/products'); 
+      //   showRegisteredMenu();
+      //   setActiveMenuItem(homeId);
+      // })
+      // .catch((err) => {
+      //   if (err.code === 'ERR_NETWORK') {
+      //     showModal("Network Error", "Could not connect to the network");
+      //   }
+      //   else if (err.response.status === 401) {
+      //     showModal("Invalid Data", "Incorrect email or password");
+      //   } else if (err.response.status === 500) {
+      //     showModal("Internal Error", err.response.data.message);
+      //   } else {
+      //     const errCode = err.response.status ? err.response.status : 'unknown'
+      //     const errMsg = err.response.data.message ? err.response.data.message : 'Unknown error'
+      //     showModal("Internal Error", `${errMsg} with code: ${errCode}`);
+      //   }
+      // })
+
     } else {  
       showModal("Invalid Data", "Login data is invalid. Enter valid data to login.");
     }
-  }  
+  }
+  
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   if (validateForm()) {
+  //     try {  
+  //       const loginHeaders = new Headers();
+  //       loginHeaders.append('Content-Type', 'application/json');
+  //       loginHeaders.append('Cookie', 'connect.sid=s%3ArUVC-CnX8M3LF7zpFPLnAWuVnKbwB8aG.DbZuK8JyHlxL%2BCWXIs1lY5TWjHMKAezg5OKe51ugvQk');
+  //       const loginBody = JSON.stringify({
+  //         email: sanitized.email,
+  //         password: formData.password
+  //       });
+  //       const response = await fetch(`${baseApi}/auth/login`, { 
+  //         method: "POST",
+  //         headers: loginHeaders,    
+  //         body: loginBody,
+  //         redirect: 'follow',
+  //         credentials: "include"          
+  //       });
+  //       // successfull login
+  //       if (response.status === 200) {
+  //         // navigate back to home page
+  //         navigate('/products');          
+  //         showRegisteredMenu();
+  //         setActiveMenuItem(homeId);
+  //       } else if (response.status === 401) {
+  //         showModal("Invalid Data", "Incorrect email or password");
+  //       } else {
+  //         console.error('Login request failed with status:', response.status);
+  //       } 
 
-  const showModal = (title, message) => {
-    
+
+  //       // using 
+  //       // passport.authenticate('local', {successRedirect: '/products', failureRedirect: '/login', })
+  //       //
+  //       // const response = await fetch(`${baseApi}/auth/login`, { 
+  //       //   method: "POST",
+  //       //   headers: loginHeaders,    
+  //       //   body: loginBody,
+  //       //   redirect: 'follow'
+  //       // });
+  //       // // successfull login
+  //       // const loggedInRedirectEnd = "/products"
+  //       // const failRedirectEnd = "/login"
+  //       // if (response.url.endsWith(loggedInRedirectEnd)) {
+  //       //   // navigate back to home page
+  //       //   navigate(loggedInRedirectEnd);          
+  //       //   showRegisteredMenu();
+  //       //   setActiveMenuItem(homeId);
+  //       // } else if (response.url.endsWith(failRedirectEnd)) {
+  //       //   showModal("Invalid Data", "Incorrect email or password");
+  //       // } else {
+  //       //   console.error('Login request failed with status:', response.status);
+  //       // } 
+
+
+
+  //     } catch (err) {
+  //       console.error(err.message);
+  //     }
+  //   } else {  
+  //     showModal("Invalid Data", "Login data is invalid. Enter valid data to login.");
+  //   }
+  // }  
+
+  const showModal = (title, message) => {    
     setModalInfo({
       title: title,
       message: message

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { loginId } from './MenuItems';
 import { Modal } from 'bootstrap';
 import ModalMsg from './ModalMsg';
@@ -26,29 +27,56 @@ const LogOut = props => {
 
   const logoutUser = async () => {
     const loggedOutEnd = "/login"
-    // const response = await fetch(`${baseApi}/auth/logout`)
-    const response = await fetch(`${baseApi}/auth/logout`, {
-      method: "GET", 
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',            
-      },           
-      credentials: 'include'
-    });   
 
+    // const response = await fetch(`${baseApi}/auth/logout`)
 
     try {
-      if (response.url.endsWith(loggedOutEnd)) {
+      const response = await axios({
+        method: 'get',
+        withCredentials: true,
+        url: `${baseApi}/auth/logout`,
+      });
+      if (response.status === 205) {        
         navigate(loggedOutEnd);          
         showNotRegisteredMenu();
         setActiveMenuItem(loginId);
       } else {
-        showModal("Server error", "Cound not logout");
-        console.error('Logout request failed with status:', response.status);
-      }        
+        console.log('Logout - Non error return, but not status 205');
+        showModal("Internal Error", "Something went wrong");          
+      }
     } catch (err) {
-      console.error(err.message);
+      if (err.message) {
+        console.log(err.message)
+      } else if (err.response.data.message) {
+        console.log(err.response.data.message)
+      } else {
+        console.log('Logout - unknown error')
+      }
+      showModal("Internal Error", "Something went wrong");  
     }
+
+    // const response = await fetch(`${baseApi}/auth/logout`, {
+    //   method: "GET",
+    //   headers: {
+    //     'Accept': 'application/json',
+    //     'Content-Type': 'application/json',
+    //   },
+    //   credentials: 'include'
+    // });
+
+    // try {
+    //   if (response.url.endsWith(loggedOutEnd)) {
+    //     navigate(loggedOutEnd);
+    //     showNotRegisteredMenu();
+    //     setActiveMenuItem(loginId);
+    //   } else {
+    //     showModal("Server error", "Cound not logout");
+    //     console.error('Logout request failed with status:', response.status);
+    //   }
+    // } catch (err) {
+    //   console.error(err.message);
+    // }
+    
   }
 
   useEffect(() => {

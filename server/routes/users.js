@@ -71,14 +71,52 @@ usersRouter.post('/', async (req, res) => {
   //    "password_hash": "QWERTY!@#$%^",
   //    "first_name": "John",
   //    "last_name": "Doe",
-  //    "phone": "(800) 555-1234"
+  //    "phone": "(800) 555-1234",
+  //    "google": "1234567890"
   //  }
   
-  const { email, password_hash, first_name, last_name, phone } = req.body;
-  const rowValues = [email, password_hash, first_name, last_name, phone];
+  const { email, password_hash, first_name, last_name, phone, google } = req.body;
+  const rowValues = [email, password_hash, first_name, last_name, phone, google];
   const sqlCommand = `
-    INSERT INTO users (email, password_hash, first_name, last_name, phone) 
-    VALUES ($1, $2, $3, $4, $5) RETURNING *;`;
+    INSERT INTO users (email, password_hash, first_name, last_name, phone, google) 
+    VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;`;
+  try {
+    const results = await db.query(sqlCommand, rowValues);
+    if (db.validResultsAtLeast1Row(results)) {      
+      res.status(201).json(results.rows[0]);      
+    } else {
+      res.status(404).json('User not inserted');
+    }    
+  } catch (err) {
+    if (err.code === '23505') {
+      res.status(400).json('email already used');
+    } else if (err.code === '23502') {
+      res.status(400).json('required value missing');
+    } else {
+      throw Error(err);
+    }    
+  }
+});
+
+usersRouter.post('/google', async (req, res) => {
+
+  // POST request
+  // path: localhost:5000/users/google
+  // body: JSON object
+  //  {
+  //    "email": "user@email.com",
+  //    "password_hash": null
+  //    "first_name": "John",
+  //    "last_name": "Doe",
+  //    "phone": null
+  //    "google": "1234567890"
+  //  }
+  
+  const { email, first_name, last_name, google } = req.body;
+  const rowValues = [email, first_name, last_name, google];
+  const sqlCommand = `
+    INSERT INTO users (email, first_name, last_name, google) 
+    VALUES ($1, $2, $3, $4) RETURNING *;`;
   try {
     const results = await db.query(sqlCommand, rowValues);
     if (db.validResultsAtLeast1Row(results)) {      
@@ -108,19 +146,21 @@ usersRouter.put('/:guid', async (req, res) => {
   //    "password_hash": "123ABC",
   //    "first_name": "John",
   //    "last_name": "Doe",
-  //    "phone": "(800) 555-1234"
+  //    "phone": "(800) 555-1234",
+  //    "google": "1234567890"
   //  }
      
-  const { email, password_hash, first_name, last_name, phone } = req.body;
-  const rowValues = [email, password_hash, first_name, last_name, phone, req.guid];
+  const { email, password_hash, first_name, last_name, phone, google } = req.body;
+  const rowValues = [email, password_hash, first_name, last_name, phone, google, req.guid];
   const sqlCommand = `
     UPDATE users
     SET email = $1, 
         password_hash = $2, 
         first_name = $3, 
         last_name = $4, 
-        phone = $5
-    WHERE guid = $6
+        phone = $5,
+        google = $6
+    WHERE guid = $7
     RETURNING *;`;
   try {
     const results = await db.query(sqlCommand, rowValues);

@@ -13,6 +13,7 @@ const users = [
     first_name: 'Adam',
     last_name: 'Smith',
     phone: '800 555-1212',    
+    google: '123456789012345678901'
   },
   {
     guid: '6714f724-f838-8f90-65a1-30359152dcdb',
@@ -20,7 +21,8 @@ const users = [
     password_hash: 'abcdef',
     first_name: 'Bill',
     last_name: 'Black',
-    phone: '800 555-5555'
+    phone: '800 555-5555',
+    google: '123456789012345678902'
   },
   {
     guid: '516a1130-8398-3234-fc31-6e31fb695b85',
@@ -28,7 +30,8 @@ const users = [
     password_hash: 'HASHME',
     first_name: 'Chad',
     last_name: 'White',
-    phone: '800 555-7890'
+    phone: '800 555-7890',
+    google: null
   },
   {
     guid: '5735c309-d480-3236-62da-31e13c35b91e',
@@ -36,7 +39,8 @@ const users = [
     password_hash: 'QWERTY',
     first_name: 'Doug',
     last_name: 'Jones',
-    phone: '800 555-2211'
+    phone: '800 555-2211',
+    google: '123456789012345678903'
   },
 {
     guid: 'a24894ed-10c5-dd83-5d5c-bbfea7ac6dca',
@@ -77,14 +81,19 @@ async function createUsersIndex(indexName, columnName) {
 // };
 
 function createUsersTable() {
+
+  // note:
+  //  google authenticated users will not have a phone or password_hash
+  //  therefore phone and password_hash can be null. 
+  //  error checking for these values is done at client level
   const sqlCreateTable = `CREATE TABLE IF NOT EXISTS ${usersTableName} (
     "guid"          uuid      PRIMARY KEY DEFAULT gen_random_uuid(),
     "email"         varchar   NOT NULL UNIQUE,
-    "password_hash" TEXT      NOT NULL,
+    "password_hash" TEXT,
     "first_name"    varchar   NOT NULL,
     "last_name"     varchar   NOT NULL,
-    "phone"         varchar   NOT NULL,
-    "google"        JSON      
+    "phone"         varchar,
+    "google"        TEXT      
   );`
   try {
     return db.query(sqlCreateTable);
@@ -95,14 +104,14 @@ function createUsersTable() {
 
 async function insertAllUsers() {
   const sqlCommand = `
-    INSERT INTO ${usersTableName} (guid, email, password_hash, first_name, last_name, phone) 
-    VALUES ($1, $2, $3, $4, $5, $6) 
+    INSERT INTO ${usersTableName} (guid, email, password_hash, first_name, last_name, phone, google) 
+    VALUES ($1, $2, $3, $4, $5, $6, $7) 
     RETURNING *;`;
   try {
     for (let i = 0; i < users.length; i++) {
       const user = users[i];
-      const { guid, email, password_hash, first_name, last_name, phone } = user;
-      const rowValues = [guid, email, password_hash, first_name, last_name, phone];      
+      const { guid, email, password_hash, first_name, last_name, phone, google } = user;
+      const rowValues = [guid, email, password_hash, first_name, last_name, phone, google];
       await db.query(sqlCommand, rowValues);
     }
     return users.length;

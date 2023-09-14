@@ -13,6 +13,7 @@ import LogOut from './components/LogOut';
 import Home from './components/Home';
 
 import './App.css';
+import axios from 'axios';
 
 const rootStart = process.env.REACT_APP_DEVROOT;
 const pgHost = process.env.REACT_APP_PGHOST;
@@ -43,25 +44,71 @@ function App() {
     headerRef.current.showNotRegisteredMenu()
   }
 
+  // const isLoggedIn = () => {
+  //   axios({
+  //     method: 'get',
+  //     withCredentials: true,
+  //     url: "http://localhost:5000/is_logged_in",
+  //   })
+  //   .then((res) => {
+  //     setLoggedIn("Yes")
+  //     console.log(res)
+  //     console.log('Logged in')
+  //   })
+  //   .catch((err) => {
+  //     setLoggedIn("No")
+  //     console.log(err);
+  //   })
+  // }
+
   const isLoggedIn = async () => {    
-    const response = await fetch(`${baseApi}/auth/is_logged_in`, {
-      method: "GET", 
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',            
-      },           
-      credentials: 'include'
-    });   
-    if (response.status === 200) {
-      return true
-    } else {
-      return false
-    }    
+    try {
+      const response = await axios({
+        method: 'get',
+        withCredentials: true,
+        url: `${baseApi}/auth/is_logged_in`
+      });
+      if (response) {
+        document.getElementById("testData").value = "Yes, Logged in"
+        return true  
+      } else {
+        document.getElementById("testData").value = "NOT Logged in"      
+        return false
+      }
+    } catch (err) {
+      if (err.response.status !== 401) { 
+        const errCode = err.response.status ? err.response.status : 'unknown'
+        const errMsg = err.response.data.message ? err.response.data.message : 'Unknown error'
+        console.log(`${errMsg} with code: ${errCode}`);
+      }
+      document.getElementById("testData").value = "NOT Logged in"
+      return false      
+    }
+
+    // axios({
+    //   method: 'get',
+    //   withCredentials: true,
+    //   url: `${baseApi}/auth/is_logged_in`
+    // })
+    // .then((res) => {
+    //   document.getElementById("testData").value = "Yes, Logged in"
+    //   return true
+    // })
+    // .catch((err) => {
+    //   if (err.response.status !== 401) { 
+    //     const errCode = err.response.status ? err.response.status : 'unknown'
+    //     const errMsg = err.response.data.message ? err.response.data.message : 'Unknown error'
+    //     console.log(`${errMsg} with code: ${errCode}`);
+    //   }
+    //   document.getElementById("testData").value = "NOT Logged in"
+    //   return false
+    // })
   }
 
-  const checkedLoggedIn = async () => {
+  const checkedLoggedIn = () => {
     let loggedInStatus = ""
-    if (await isLoggedIn()) {
+    const userloggedIn = isLoggedIn()
+    if (userloggedIn) {
       loggedInStatus = "Yes, Logged in"
     } else {
       loggedInStatus = "NOT Logged in"
@@ -69,13 +116,44 @@ function App() {
     document.getElementById("testData").value = loggedInStatus
   }  
 
+  // const loginTest = () => {
+  //   axios({
+  //     method: "post",
+  //     data: {
+  //       email: 'mike@email.com',
+  //       password: '7hxk@ZSOLdY%4AD'
+  //     },
+  //     withCredentials: true,
+  //     url: "http://localhost:5000/api/auth/login",
+  //   })
+  //     .then((res) => {
+  //       document.getElementById("testData").value = "Yes, Logged in"
+  //     })
+  //     .catch((err) => {
+  //       document.getElementById("testData").value = "NOT Logged in"
+  //       if (err.code === 'ERR_NETWORK') {
+  //         console.log("Could not connect to the network");
+  //       }
+  //       else if (err.response.status === 401) {
+  //         console.log("Incorrect email or password");
+  //       } else if (err.response.status === 500) {
+  //         console.log(err.response.data.message);
+  //       } else {
+  //         const errCode = err.response.status ? err.response.status : 'unknown'
+  //         const errMsg = err.response.data.message ? err.response.data.message : 'Unknown error'
+  //         console.log(`${errMsg} with code: ${errCode}`);
+  //       }
+  //     })
+  // }
+
   return (
     <Router>
       <Fragment>
         <Header ref={headerRef} />
 
-        <button onClick={checkedLoggedIn}>Test</button>
+        <button onClick={checkedLoggedIn}>Test</button>        
         <input type="text" id="testData" name="testData" ></input>
+        {/* <button onClick={loginTest}>Login</button> */}
 
       </Fragment>
       <Routes>

@@ -19,13 +19,14 @@ const {
   cartItemsTableName,
   orderItemsTableName
 } = require('../myConsts');
-const { findUserByEmail } = require('../../db/userQueries');
+const { findUserByEmail, findUserByGoogleId } = require('../../db/userQueries');
 
 require("dotenv").config();
 const baseUrl = `${process.env.BASEURL}/users`; 
 
 const user2Guid = '6714f724-f838-8f90-65a1-30359152dcdb';       // guid of 2nd user'
 const user2Email = 'bill@gmail.com';
+const user2GoogleId = '123456789012345678902';
 const nonExistingGuid = '56d916ec-e6b5-0e62-9330-0248c6792316'; // 2nd product, not in users
 
 function testUsers(app) {
@@ -336,13 +337,14 @@ function testUsers(app) {
 
     });
   
-    describe(`POST ${baseUrl}`, function() {
+    describe(`POST ${baseUrl} (no google)`, function() {
       const newUser = {        
         email: 'greg@email.com',
         password_hash: '098765',
         first_name: 'Greg',
         last_name: 'Blue',
-        phone: '800 555-8888'
+        phone: '800 555-8888',
+        google: null
       };
       const invalidUser = {
         password_hash: '098765',
@@ -373,6 +375,7 @@ function testUsers(app) {
         assert.equal(postedUser.first_name, newUser.first_name);
         assert.equal(postedUser.last_name, newUser.last_name);
         assert.equal(postedUser.phone, newUser.phone);
+        assert.equal(postedUser.google, newUser.google);
       });
   
       it('did NOT post user with a duplicate email', async function() {
@@ -389,14 +392,14 @@ function testUsers(app) {
           .expect(400);
       });
     
-      it('did NOT post user with blank password_hash', async function() {
-        invalidUser.email = 'invalid@email.com';
-        invalidUser.password_hash = null;
-        return await request(app)
-          .post(baseUrl)
-          .send(invalidUser)
-          .expect(400);
-      });
+      // it('did NOT post user with blank password_hash', async function() {
+      //   invalidUser.email = 'invalid@email.com';
+      //   invalidUser.password_hash = null;
+      //   return await request(app)
+      //     .post(baseUrl)
+      //     .send(invalidUser)
+      //     .expect(400);
+      // });
   
       it('did NOT post user with blank first_name', async function() {
         invalidUser.password_hash = '123456';
@@ -416,21 +419,94 @@ function testUsers(app) {
           .expect(400);
       });
   
-      it('did NOT post user with blank phone', async function() {            
-        invalidUser.last_name = 'Green';
-        invalidUser.phone = null;
-        return await request(app)
-          .post(baseUrl)
-          .send(invalidUser)
-          .expect(400);
+    //   it('did NOT post user with blank phone', async function() {
+    //     invalidUser.last_name = 'Green';
+    //     invalidUser.phone = null;
+    //     return await request(app)
+    //       .post(baseUrl)
+    //       .send(invalidUser)
+    //       .expect(400);
+    //   });
+      
+    }); 
+
+    describe(`POST ${baseUrl} (with google)`, function() {
+      const newUser = {        
+        email: 'greg@email.com',
+        password_hash: '098765',
+        first_name: 'Greg',
+        last_name: 'Blue',
+        phone: '800 555-8888',
+        google: '123456789012345678909'
+      };
+      const resetSqlCommand = `
+        DELETE FROM users         
+        WHERE email = 'greg@email.com';`
+
+      before('before first POST test', async function() {
+        await db.query(resetSqlCommand);
       });
+
+      after('after last POST test', async function() {
+        await db.query(resetSqlCommand);
+      });
+
+      it('post a new user with valid data', async function() {
+        const response = await request(app)
+          .post(baseUrl)
+          .send(newUser)
+          .expect(201);
+        const postedUser = response.body;
+        assert.equal(postedUser.email, newUser.email);
+        assert.equal(postedUser.password_hash, newUser.password_hash);
+        assert.equal(postedUser.first_name, newUser.first_name);
+        assert.equal(postedUser.last_name, newUser.last_name);
+        assert.equal(postedUser.phone, newUser.phone);
+        assert.equal(postedUser.google, newUser.google);
+      });
+        
+    });
+
+    describe(`POST ${baseUrl}/google (from google)`, function() {
+      const newUser = {        
+        email: 'greg@email.com',        
+        first_name: 'Greg',
+        last_name: 'Blue',        
+        google: '123456789012345678909'
+      };
+      const resetSqlCommand = `
+        DELETE FROM users         
+        WHERE email = 'greg@email.com';`
+
+      before('before first POST test', async function() {
+        await db.query(resetSqlCommand);
+      });
+
+      after('after last POST test', async function() {
+        await db.query(resetSqlCommand);
+      });
+
+      it('post a new user with valid data', async function() {
+        const response = await request(app)
+          .post(`${baseUrl}/google`)
+          .send(newUser)
+          .expect(201);
+        const postedUser = response.body;
+        assert.equal(postedUser.email, newUser.email);
+        assert.equal(postedUser.password_hash, null);
+        assert.equal(postedUser.first_name, newUser.first_name);
+        assert.equal(postedUser.last_name, newUser.last_name);
+        assert.equal(postedUser.phone, null);
+        assert.equal(postedUser.google, newUser.google);
+      });
+        
     });
   
-    describe(`PUT ${baseUrl}/:guid`, function() {
+    describe(`PUT ${baseUrl}/:guid (no google)`, function() {
       const putUserGuid = user2Guid;
       const resetSqlCommand = `
         UPDATE users 
-        SET email = 'bill@gmail.com', password_hash = 'abcdef', first_name = 'Bill', last_name = 'Smith', phone = '800-555-5555'
+        SET email = 'bill@gmail.com', password_hash = 'abcdef', first_name = 'Bill', last_name = 'Smith', phone = '800-555-5555', google = '123456789012345678902'
         WHERE guid = '${user2Guid}';`;
       const testUser = {        
         email: "bob@email.com",
@@ -507,7 +583,51 @@ function testUsers(app) {
       });
   
     });
+
+    describe(`PUT ${baseUrl}/:guid (with google)`, function() {
+      const putUserGuid = user2Guid;
+      const resetSqlCommand = `
+        UPDATE users 
+        SET email = 'bill@gmail.com', password_hash = 'abcdef', first_name = 'Bill', last_name = 'Smith', phone = '800-555-5555', google = '123456789012345678902'
+        WHERE guid = '${user2Guid}';`;
+      const testUser = {        
+        email: "bob@email.com",
+        password_hash: "zyxwvu",
+        first_name: "Bob",
+        last_name: "Jones",
+        phone: "(800) 555-2211",
+        google: '123456789012345678909'
+      };
+
+      describe(`Valid ${baseUrl}/:guid`, function() {
+
+        before('before 1st PUT test', async function() {
+          await db.query(resetSqlCommand);
+        });
   
+        afterEach('afterEach PUT test ', async function() {
+          await db.query(resetSqlCommand);
+        });
+  
+        it('updates the correct user and returns it', async function() {
+          let initialUser;
+          let updatedUser;      
+          
+          const response = await request(app)
+            .get(`${baseUrl}/${putUserGuid}`);
+          initialUser = response.body;          
+          updatedUser = Object.assign({}, testUser);
+          updatedUser.guid = putUserGuid;
+          const response_1 = await request(app)
+            .put(`${baseUrl}/${putUserGuid}`)
+            .send(updatedUser)
+            .expect(200);
+          expect(response_1.body).to.be.deep.equal(updatedUser);
+        });
+      });
+   
+    });   
+
     describe(`DELETE ${baseUrl}/:guid`, function() {
       const toDelUser = {
         email: 'greg@email.com',
@@ -567,7 +687,7 @@ function testUsers(app) {
 
   describe('get user by email', function () {
     
-    it('returns a single user object', async function () {     
+    it('returns a single user object', async function () {
       const userObj = await findUserByEmail(user2Email);
       expect(userObj).to.be.an.instanceOf(Object);
       expect(userObj).to.not.be.an.instanceOf(Array);
@@ -583,8 +703,8 @@ function testUsers(app) {
       expect(userObj).to.have.ownProperty('phone');
     });
 
-    it('returned user has the correct email', async function() {
-      const userObj = await findUserByEmail(user2Email);      
+    it('returned user has the correct email', async function () {
+      const userObj = await findUserByEmail(user2Email);
       expect(userObj.email).to.be.an.equal(user2Email);
     });
 
@@ -593,7 +713,37 @@ function testUsers(app) {
       expect(userObj).to.be.null;
     });
 
-  })
+  });
+
+  describe('get user by google', function () {
+    
+    it('returns a single user object', async function () {
+      const userObj = await findUserByGoogleId(user2GoogleId);
+      expect(userObj).to.be.an.instanceOf(Object);
+      expect(userObj).to.not.be.an.instanceOf(Array);
+    });
+
+    it('returns a full user object', async function () {
+      const userObj = await findUserByGoogleId(user2GoogleId);
+      expect(userObj).to.have.ownProperty('guid');
+      expect(userObj).to.have.ownProperty('email');
+      expect(userObj).to.have.ownProperty('password_hash');
+      expect(userObj).to.have.ownProperty('first_name');
+      expect(userObj).to.have.ownProperty('last_name');
+      expect(userObj).to.have.ownProperty('phone');
+    });
+
+    it('returned user has the correct google id', async function () {
+      const userObj = await findUserByGoogleId(user2GoogleId);
+      expect(userObj.google).to.be.an.equal(user2GoogleId);
+    });
+
+    it('called with a non existing email returns null', async function () {
+      const userObj = await findUserByGoogleId('XYZ');
+      expect(userObj).to.be.null;
+    });
+
+  });
 
 };
 

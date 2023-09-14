@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { homeId } from './MenuItems';
 import { Modal } from 'bootstrap';
 import ModalMsg from './ModalMsg';
@@ -150,41 +151,125 @@ const Register = props => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateForm()) {
-      try { 
-        const response = await fetch(`${baseApi}/auth/register`, {        
-          method: "POST",
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(sanitized)
-        });
 
-        // successfull register
+      try {
+        const response = await axios({
+          method: "post",
+          data: {
+            first_name: sanitized.first_name,
+            last_name: sanitized.last_name,
+            email: sanitized.email,
+            phone: sanitized.phone,
+            password: formData.password
+          },
+          withCredentials: true,
+          url: `${baseApi}/auth/register`
+        });
         if (response.status === 200) {
-          // navigate back to home page
-          navigate('/');          
-          showRegisteredMenu();
+          // successfull login
+          navigate('/');         
           setActiveMenuItem(homeId);
-        } else if (response.status === 409) {
-          // setFormErrors({
-          //   ...formErrors,
-          //   email: "Email has been already used",
-          //   confirm: ""
-          // });
-          // if got here, then only error is email has been used
-          setFormErrors({
-            first_name: "",
-            last_name: "",
-            phone: "",
-            email: "Email has been already used",
-            password: "",
-            confirm: ""
-          });
-          showModal("Invalid Data", "Email has been already used");          
         } else {
-          console.error('Register request failed with status:', response.status);
-        }        
+          showModal("Internal Error", "Something went wrong");
+        }
       } catch (err) {
-        console.error(err.message);
+        if (err.response && err.response.status && err.response.data && err.response.data.message) { 
+          if (err.response.status === 409) {
+            setFormErrors({
+              first_name: "",
+              last_name: "",
+              phone: "",
+              email: "Email has been already used",
+              password: "",
+              confirm: ""
+            });
+            showModal("Invalid Data", "Email has already been used");  
+          } else if (err.response.status === 500) {
+            console.log(err.response.data.message)
+            showModal("Server Error", "Could not create user");              
+          } else {
+            console.log(err.response.data.message)
+            showModal("Internal Error", "Something went wrong");
+          }
+        } else {
+          if (err.message) {
+            console.log(err.message)
+          } else if (err.response.data.message) {
+            console.log(err.response.data.message)
+          } else {
+            console.log('Register - unknown error')
+          }
+          showModal("Internal Error", "Something went wrong");
+        }
       }
+
+      // axios({
+      //   method: "post",
+      //   data: {
+      //     first_name: sanitized.first_name,
+      //     last_name: sanitized.last_name,
+      //     email: sanitized.email,
+      //     phone: sanitized.phone,
+      //     password: formData.password
+      //   },
+      //   withCredentials: true,
+      //   url: `${baseApi}/auth/register`
+      // })
+      // .then((res) => {
+      //   // successfull login
+      //   navigate('/');         
+      //   setActiveMenuItem(homeId);
+      // })
+      // .catch((err) => {
+      //   if (err.response.status === 400) {
+      //     setFormErrors({
+      //       first_name: "",
+      //       last_name: "",
+      //       phone: "",
+      //       email: "Email has been already used",
+      //       password: "",
+      //       confirm: ""
+      //     });
+      //     showModal("Invalid Data", "Email has already been used");
+      //   } else {
+      //     const errCode = err.response.status ? err.response.status : 'unknown'
+      //     const errMsg = err.response.data.message ? err.response.data.message : 'Unknown error'
+      //     showModal("Internal Error", `${errMsg} with code: ${errCode}`);
+      //     console.error('Register request failed with status:', errCode);
+      //   }
+      // })
+
+
+      // try { 
+      //   const response = await fetch(`${baseApi}/auth/register`, {        
+      //     method: "POST",
+      //     headers: { 'Content-Type': 'application/json' },
+      //     body: JSON.stringify(sanitized)
+      //   });
+
+      //   // successfull register
+      //   if (response.status === 200) {
+      //     // navigate back to home page
+      //     navigate('/');          
+      //     showRegisteredMenu();
+      //     setActiveMenuItem(homeId);
+      //   } else if (response.status === 409) {
+      //     // if got here, then only error is email has been used
+      //     setFormErrors({
+      //       first_name: "",
+      //       last_name: "",
+      //       phone: "",
+      //       email: "Email has been already used",
+      //       password: "",
+      //       confirm: ""
+      //     });
+      //     showModal("Invalid Data", "Email has been already used");          
+      //   } else {
+      //     console.error('Register request failed with status:', response.status);
+      //   }        
+      // } catch (err) {
+      //   console.error(err.message);
+      // }
 
     } else {  
       showModal("Invalid Data", "Registration data is invalid. Enter valid data to register.");

@@ -1,33 +1,43 @@
 const express = require('express');
 const session = require('express-session');
-const passport = require('passport');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-
-require('./auth');
-
+const passport = require('passport');
+const userQuery = require('./db/userQueries');
 require("dotenv").config();
+// ---- END OF Imports ------------------
+
 const port = process.env.PORT;
 const baseUrl = process.env.BASEURL; 
+const clientRoot = process.env.CLIENT_ROOT;
+const clientHost = process.env.CLIENT_HOST; 
+const clientPort = process.env.CLIENT_PORT;
+const clientOrigin = `${clientRoot}${clientHost}:${clientPort}`
+// ---- END OF consts from process.env ------------------
 
 const app = express();
 
-app.use(cors());
+// Middleware ------------------
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.set('trust proxy', 1);
+app.use(cors({
+  origin: clientOrigin, // <-- location of react app client http://localhost:3000  
+  credentials: true
+}));
 
 app.use(session({
   secret: process.env.SESSION_SECRET || 'not_so_secret',
   resave: false,
-  saveUninitialized: false  
+  saveUninitialized: false
 }));
 
 // passport configuration
 app.use(passport.initialize());
 app.use(passport.session());
+require('./passportConfig')(passport);
+// ---- END OF Middleware ------------------
 
-// routes
+// Routes ------------------
 const usersRouter = require('./routes/users');
 const authRouter = require('./routes/auth');
 const productsRouter = require('./routes/products');

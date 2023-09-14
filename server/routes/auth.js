@@ -37,24 +37,7 @@ authRouter.post('/register', async (req, res) => {
   }
 });
 
-authRouter.post('/login', 
-
-  // POST request - login user
-  // path: localhost:5000/auth/login
-  // body: 
-  //  {
-  //    "email": "user@email.com",
-  //    "password": "123ABC",
-  //  }
-  // this path uses passport LocalStrategy (see main index.js)
-
-  passport.authenticate('local', {
-    successRedirect: '/products',
-    failureRedirect: '/login',
-  })
-);
-
-authRouter.post('/loginnew', (req, res, next) => {
+authRouter.post('/login', (req, res, next) => {
 
   // POST request - login user
   // path: localhost:5000/auth/login
@@ -75,7 +58,7 @@ authRouter.post('/loginnew', (req, res, next) => {
     }
     if (!theUser) {
       res.status(401).json(failureDetails);
-      return;
+      return;  
     }
     // save user in session
     req.login(theUser, (err) => {
@@ -83,7 +66,7 @@ authRouter.post('/loginnew', (req, res, next) => {
         res.status(500).json({ message: "Session save went bad." });
         return;
       }
-      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      // res.setHeader('Access-Control-Allow-Credentials', 'true');
       res.status(200).json({ errors: false, user: theUser });
     });
   })(req, res, next);
@@ -108,7 +91,8 @@ authRouter.get('/logout', (req, res, next) => {
         } else {
           // send logged out message
           // res.send('Logging out...');
-          res.redirect('/login');
+          // res.redirect('/login');
+          res.sendStatus(205);
         }
       })
     }
@@ -126,18 +110,7 @@ function isLoggedIn(req, res, next) {
   }
 };
 
-// authRouter.get('/profile', loggedIn, (req, res, next) => {
-
-//   // GET request - go to profile page (test if user is logged in)
-//   // path: localhost:5000/auth/profile
-//   // body: not used
-//   // this path uses passport LocalStrategy (see main index.js)
-//   //   and the loggedIn middleware function
-
-//   res.status(200).send(req.user);  
-// });
-
-authRouter.get('/profile', (req, res) => {
+authRouter.get('/profile', isLoggedIn, (req, res) => {
   if (req.isAuthenticated()) {
     res.send('Welcome to your profile');
   } else {
