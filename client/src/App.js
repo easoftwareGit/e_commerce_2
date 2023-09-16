@@ -44,23 +44,6 @@ function App() {
     headerRef.current.showNotRegisteredMenu()
   }
 
-  // const isLoggedIn = () => {
-  //   axios({
-  //     method: 'get',
-  //     withCredentials: true,
-  //     url: "http://localhost:5000/is_logged_in",
-  //   })
-  //   .then((res) => {
-  //     setLoggedIn("Yes")
-  //     console.log(res)
-  //     console.log('Logged in')
-  //   })
-  //   .catch((err) => {
-  //     setLoggedIn("No")
-  //     console.log(err);
-  //   })
-  // }
-
   const isLoggedIn = async () => {    
     try {
       const response = await axios({
@@ -157,7 +140,13 @@ function App() {
 
       </Fragment>
       <Routes>
-        <Route path="/products" element={<Products />} />
+        <Route
+          path="/products"
+          element={
+            <Products
+              baseApi={baseApi}
+            />}
+        />
         <Route path="/orderhistory" element={<OrderHistory />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/checkout" element={<CheckOut />} />

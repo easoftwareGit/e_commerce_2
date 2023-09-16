@@ -28,7 +28,7 @@ productsRouter.get('/', async (req, res) => {
   // path: localhost:5000/products 
   // body: not used  
 
-  const sqlCommand = `SELECT * FROM products;`;  
+  const sqlCommand = `SELECT * FROM products ORDER BY category, name;`;  
   try {
     const results = await db.query(sqlCommand);
     if (db.validResultsAtLeast1Row(results)) {
