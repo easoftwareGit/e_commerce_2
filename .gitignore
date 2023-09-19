@@ -6,3 +6,5 @@
 /client/.env
 /client/public/other_images
 /client/images
+/client/public/images
+/client/public/images/test4.png
