@@ -10,7 +10,7 @@ const cartCount = setupCarts.cartCount;
 
 const {
   cartsTableName,
-  cartsUserGuidForeignKeyName,
+  cartsUserUuidForeignKeyName,
   cartItemsTableName
 } = require('../myConsts');
 
@@ -20,8 +20,9 @@ const baseUrl = `${process.env.BASEURL}/carts`;
 function testCarts(app) {
 
   describe(`${baseUrl} routes`, function () {
-    const cart2Guid = '82433d04-acae-0036-7391-ab6356601ad0'; // 2nd cart from sample data
-    const nonexistingGuid = '56d916ec-e6b5-0e62-9330-0248c6792317';
+    const cart2Uuid = '82433d04-acae-0036-7391-ab6356601ad0'; // 2nd cart from sample data
+    const user3Uuid = '516a1130-8398-3234-fc31-6e31fb695b85'; // user 4, linked to cart #2
+    const nonexistingUuid = '56d916ec-e6b5-0e62-9330-0248c6792317';
 
     describe('setup carts table', function() {
 
@@ -45,7 +46,7 @@ function testCarts(app) {
       });
       
       it('check for carts FOREIGN KEY', async function() {        
-        const doesExist = await dbTools.foreignKeyExists(cartsUserGuidForeignKeyName);      
+        const doesExist = await dbTools.foreignKeyExists(cartsUserUuidForeignKeyName);      
         expect(doesExist).to.be.true;
       });
 
@@ -65,8 +66,8 @@ function testCarts(app) {
     });
 
     describe('cannot DELETE users with a cart', function() {
-      let testUserGuid;
-      let testCartGuid;
+      let testUserUuid;
+      let testCartUuid;
       const user = {  
         email: 'greg@email.com',
         password_hash: '098765',
@@ -89,28 +90,28 @@ function testCarts(app) {
         const rowValues = [email, password_hash, first_name, last_name, phone];      
         const response = await db.query(sqlCommand, rowValues);
         const testUser = response.rows[0];
-        testUserGuid = testUser.guid;
+        testUserUuid = testUser.uuid;
       });
 
       before('insert test cart', async function() {
         const cart = {
           created: new Date("06/26/2323"),
           modified: new Date("06/26/2323"),    
-          user_guid: testUserGuid
+          user_uuid: testUserUuid
         };
         const sqlCommand = `
-          INSERT INTO carts (created, modified, user_guid) 
+          INSERT INTO carts (created, modified, user_uuid) 
           VALUES ($1, $2, $3) 
           RETURNING *;`;
-        const { created, modified, user_guid } = cart;
-        const rowValues = [created, modified, user_guid];
+        const { created, modified, user_uuid } = cart;
+        const rowValues = [created, modified, user_uuid];
         const response = await db.query(sqlCommand, rowValues);
         const testCart = response.rows[0];
-        testCartGuid = testCart.guid;        
+        testCartUuid = testCart.uuid;        
       });
 
       after('delete test cart', async function() {    
-        const sqlCommand = `DELETE FROM carts WHERE guid = '${testCartGuid}';`;        
+        const sqlCommand = `DELETE FROM carts WHERE uuid = '${testCartUuid}';`;        
         await db.query(sqlCommand);
       });
 
@@ -120,14 +121,14 @@ function testCarts(app) {
       });
 
       it('test user exists before DELETE user', async function() {
-        const sqlCommand = `SELECT * FROM users WHERE guid = '${testUserGuid}';`;
+        const sqlCommand = `SELECT * FROM users WHERE uuid = '${testUserUuid}';`;
         const response = await db.query(sqlCommand);
         const doesExist = response.rows.length === 1;
         expect(doesExist).to.be.true;
       });
 
       it('test cart exists before DELETE user', async function() {
-        const sqlCommand = `SELECT * FROM carts WHERE guid = '${testCartGuid}';`;
+        const sqlCommand = `SELECT * FROM carts WHERE uuid = '${testCartUuid}';`;
         const response = await db.query(sqlCommand);
         const doesExist = response.rows.length === 1;
         expect(doesExist).to.be.true;
@@ -136,7 +137,7 @@ function testCarts(app) {
       it('try to DELETE user that has a cart', async function () {        
         // DO NOT USE baseUrl here. delete from "/api/users/####"
         return await request(app)
-          .delete(`/api/users/${testUserGuid}`)
+          .delete(`/api/users/${testUserUuid}`)
           .expect(409);   // constraint error
       });
     });
@@ -156,20 +157,20 @@ function testCarts(app) {
           .expect(200);
         expect(response.body.length).to.be.equal(cartCount);
         response.body.forEach((cart) => {
-          expect(cart).to.have.ownProperty('guid');
+          expect(cart).to.have.ownProperty('uuid');
           expect(cart).to.have.ownProperty('created');
           expect(cart).to.have.ownProperty('modified');
-          expect(cart).to.have.ownProperty('user_guid');
+          expect(cart).to.have.ownProperty('user_uuid');
         });
       });
 
     });
 
-    describe(`GET ${baseUrl}/:guid`, function() {      
+    describe(`GET ${baseUrl}/cart/:uuid`, function() {      
 
       it('returns a single cart object', async function() {
         const response = await request(app)
-          .get(`${baseUrl}/${cart2Guid}`)
+          .get(`${baseUrl}/cart/${cart2Uuid}`)
           .expect(200);
         const cart = response.body;
         expect(cart).to.be.an.instanceOf(Object);
@@ -178,50 +179,94 @@ function testCarts(app) {
 
       it('returns a full cart object', async function() {
         const response = await request(app)
-          .get(`${baseUrl}/${cart2Guid}`)
+          .get(`${baseUrl}/cart/${cart2Uuid}`)
           .expect(200);
         const cart = response.body;
-        expect(cart).to.have.ownProperty('guid');
+        expect(cart).to.have.ownProperty('uuid');
         expect(cart).to.have.ownProperty('created');
         expect(cart).to.have.ownProperty('modified');
-        expect(cart).to.have.ownProperty('user_guid');
+        expect(cart).to.have.ownProperty('user_uuid');
       });
 
-      it('returned cart has the correct guid', async function() {
+      it('returned cart has the correct uuid', async function() {
         const response = await request(app)
-          .get(`${baseUrl}/${cart2Guid}`)
+          .get(`${baseUrl}/cart/${cart2Uuid}`)
           .expect(200);
         const cart = response.body;
-        expect(cart.guid).to.be.an.equal(cart2Guid);
+        expect(cart.uuid).to.be.an.equal(cart2Uuid);
       });
 
-      it('called with an invalid formatted guid returns a 404 error', function() {
+      it('called with an invalid formatted uuid returns a 404 error', function() {
         return request(app)
-          .get(`${baseUrl}/ABC`)
+          .get(`${baseUrl}/cart/ABC`)
           .expect(404);
       });
 
-      it('called with an invalid formatted guid returns a 404 error', function() {
+      it('called with an invalid formatted uuid returns a 404 error', function() {
         return request(app)
-          .get(`${baseUrl}/${nonexistingGuid}`)
+          .get(`${baseUrl}/cart/${nonexistingUuid}`)
+          .expect(404);
+      });
+    });
+
+    describe(`GET ${baseUrl}/user/:uuid`, function() {      
+
+      it('returns a single cart object', async function() {
+        const response = await request(app)
+          .get(`${baseUrl}/user/${user3Uuid}`)
+          .expect(200);
+        const cart = response.body;
+        expect(cart).to.be.an.instanceOf(Object);
+        expect(cart).to.not.be.an.instanceOf(Array);
+      });
+
+      it('returns a full cart object', async function() {
+        const response = await request(app)
+          .get(`${baseUrl}/user/${user3Uuid}`)
+          .expect(200);
+        const cart = response.body;
+        expect(cart).to.have.ownProperty('uuid');
+        expect(cart).to.have.ownProperty('created');
+        expect(cart).to.have.ownProperty('modified');
+        expect(cart).to.have.ownProperty('user_uuid');
+      });
+
+      it('returned cart has the correct uuid', async function() {
+        const response = await request(app)
+          .get(`${baseUrl}/user/${user3Uuid}`)
+          .expect(200);
+        const cart = response.body;
+        expect(cart.uuid).to.be.an.equal(cart2Uuid);
+        expect(cart.user_uuid).to.be.an.equal(user3Uuid);
+      });
+
+      it('called with an invalid formatted uuid returns a 404 error', function() {
+        return request(app)
+          .get(`${baseUrl}/user/ABC`)
+          .expect(404);
+      });
+
+      it('called with an invalid formatted uuid returns a 404 error', function() {
+        return request(app)
+          .get(`${baseUrl}/user/${nonexistingUuid}`)
           .expect(404);
       });
     });
 
     describe(`POST ${baseUrl}`, function () {
-      const userGuid = 'a24894ed-10c5-dd83-5d5c-bbfea7ac6dca';
+      const userUuid = 'a24894ed-10c5-dd83-5d5c-bbfea7ac6dca';
       const newCart = {
         created: new Date("05/29/2323"),
         modified: new Date("05/29/2323"),    
-        user_guid: userGuid
+        user_uuid: userUuid
       };
       const invalidCart = {
         modified: new Date("05/29/2323"),    
-        user_guid: userGuid
+        user_uuid: userUuid
       };
       const resetSqlCommand = `
         DELETE FROM carts
-        WHERE user_guid = '${userGuid}';`
+        WHERE user_uuid = '${userUuid}';`
 
       before('before first POST test', async function() {
         await db.query(resetSqlCommand);
@@ -243,10 +288,10 @@ function testCarts(app) {
         // now compare - use deepEqual for dates
         assert.deepEqual(postedCart.created, newCart.created);
         assert.deepEqual(postedCart.modified, newCart.modified);
-        assert.equal(postedCart.user_guid, newCart.user_guid);
+        assert.equal(postedCart.user_uuid, newCart.user_uuid);
       });
 
-      it('did NOT post cart with a duplicate user_guid', async function() {
+      it('did NOT post cart with a duplicate user_uuid', async function() {
         return await request(app)
           .post(baseUrl)
           .send(newCart)
@@ -260,9 +305,9 @@ function testCarts(app) {
           .expect(400);
       });
 
-      it('did NOT post cart with no user_guid', async function() {        
+      it('did NOT post cart with no user_uuid', async function() {        
         invalidCart.modified = invalidCart.created;
-        invalidCart.user_guid = null;
+        invalidCart.user_uuid = null;
         return await request(app)
           .post(baseUrl)
           .send(invalidCart)
@@ -270,20 +315,20 @@ function testCarts(app) {
       });
     });
 
-    describe(`PUT ${baseUrl}/:guid`, function () {
-      const user3Guid = '516a1130-8398-3234-fc31-6e31fb695b85';   
+    describe(`PUT ${baseUrl}/:uuid`, function () {
+      const user3Uuid = '516a1130-8398-3234-fc31-6e31fb695b85';   
       const resetSqlCommand = `
         UPDATE carts 
-        SET created = '01/03/2023', modified = '01/04/2023', user_guid = '${user3Guid}'
-        WHERE guid = '${cart2Guid}';`;
+        SET created = '01/03/2023', modified = '01/04/2023', user_uuid = '${user3Uuid}'
+        WHERE uuid = '${cart2Uuid}';`;
       // in testCart: make sure to set created to correct date in carts table
       const testCart = {                
         created: new Date('01/03/23'),
         modified: new Date('05/26/23'),
-        user_guid: user3Guid
+        user_uuid: user3Uuid
       };
   
-      describe(`Valid ${baseUrl}/:guid`, function() {
+      describe(`Valid ${baseUrl}/:uuid`, function() {
 
         before('before 1st PUT test', async function() {
           await db.query(resetSqlCommand);
@@ -298,7 +343,7 @@ function testCarts(app) {
 
           updatedCart = Object.assign({}, testCart);
           const response = await request(app)
-            .put(`${baseUrl}/${cart2Guid}`)
+            .put(`${baseUrl}/${cart2Uuid}`)
             .send(updatedCart)
             .expect(200);
           const returnedCart = response.body;
@@ -306,25 +351,25 @@ function testCarts(app) {
           returnedCart.created = new Date(returnedCart.created);
           returnedCart.modified = new Date(returnedCart.modified);
           // now compare - use deepEqual for dates
-          assert.equal(returnedCart.guid, cart2Guid); 
+          assert.equal(returnedCart.uuid, cart2Uuid); 
           assert.deepEqual(returnedCart.created, updatedCart.created);
           assert.deepEqual(returnedCart.modified, updatedCart.modified);
-          assert.equal(returnedCart.user_guid, updatedCart.user_guid);
+          assert.equal(returnedCart.user_uuid, updatedCart.user_uuid);
         });
       });
       
-      describe(`Invalid ${baseUrl}/:guid`, function() {
+      describe(`Invalid ${baseUrl}/:uuid`, function() {
   
-        it('called with an invalid guid returns a 404 error', function() {
+        it('called with an invalid uuid returns a 404 error', function() {
           return request(app)
             .put(`${baseUrl}/ABC`)
             .send(testCart)
             .expect(404)
         });
 
-        it('called with a non existing guid returns a 404 error', function() {
+        it('called with a non existing uuid returns a 404 error', function() {
           return request(app)
-            .put(`${baseUrl}/${nonexistingGuid}`)
+            .put(`${baseUrl}/${nonexistingUuid}`)
             .send(testCart)
             .expect(404)
         });        
@@ -334,7 +379,7 @@ function testCarts(app) {
           const missingDataCart = Object.assign({}, testCart);
           missingDataCart.modified = null;
           return await request(app)
-            .put(`${baseUrl}/${cart2Guid}`)
+            .put(`${baseUrl}/${cart2Uuid}`)
             .send(missingDataCart)
             .expect(400)
         });
@@ -342,15 +387,15 @@ function testCarts(app) {
       });
     });
     
-    describe(`DELETE ${baseUrl}/:guid`, function() {
-      const user2Guid = '6714f724-f838-8f90-65a1-30359152dcdb'; 
+    describe(`DELETE ${baseUrl}/:uuid`, function() {
+      const user2Uuid = '6714f724-f838-8f90-65a1-30359152dcdb'; 
       const toDelCart = {
         created: new Date("06/26/2323"),
         modified: new Date("06/26/2323"),    
-        user_guid: user2Guid
+        user_uuid: user2Uuid
       };
-      const resetSqlCommand = `DELETE FROM carts WHERE user_guid = '${user2Guid}';`;
-      let delCartGuid;
+      const resetSqlCommand = `DELETE FROM carts WHERE user_uuid = '${user2Uuid}';`;
+      let delCartUuid;
       
       before('before DELETE tests, reset from prior tests', async function() {
         await db.query(resetSqlCommand);
@@ -358,42 +403,42 @@ function testCarts(app) {
 
       before('before DELETE tests', async function() {
         const sqlCommand = `
-          INSERT INTO carts (created, modified, user_guid) 
+          INSERT INTO carts (created, modified, user_uuid) 
           VALUES ($1, $2, $3) 
           RETURNING *;`;
-        const { created, modified, user_guid } = toDelCart
-        const rowValues = [created, modified, user_guid];
+        const { created, modified, user_uuid } = toDelCart
+        const rowValues = [created, modified, user_uuid];
         const response = await db.query(sqlCommand, rowValues);
         const postedCart = response.rows[0];
-        delCartGuid = postedCart.guid;
+        delCartUuid = postedCart.uuid;
       });
 
       after('after DELETE tests', async function() {
         await db.query(resetSqlCommand);
       });
 
-      describe(`Valid DELETE ${baseUrl}/:guid`, function() {
+      describe(`Valid DELETE ${baseUrl}/:uuid`, function() {
 
         it('deletes a cart', async function() {
           const response = await request(app)
-            .delete(`${baseUrl}/${delCartGuid}`)
+            .delete(`${baseUrl}/${delCartUuid}`)
             .expect(200);
-          const cartGuid = response.text;
-          expect(cartGuid).to.equal(delCartGuid);
+          const cartUuid = response.text;
+          expect(cartUuid).to.equal(delCartUuid);
         });
       });
 
-      describe(`Invalid DELETE ${baseUrl}/:guid`, function() {
+      describe(`Invalid DELETE ${baseUrl}/:uuid`, function() {
 
-        it('called with an invalid formatted guid returns a 404 error', function() {
+        it('called with an invalid formatted uuid returns a 404 error', function() {
           return request(app)
             .delete(`${baseUrl}/ABC`)
             .expect(404);
         });
 
-        it('called with a non existing guid returns a 404 error', function() {
+        it('called with a non existing uuid returns a 404 error', function() {
           return request(app)
-            .delete(`${baseUrl}/${nonexistingGuid}`)
+            .delete(`${baseUrl}/${nonexistingUuid}`)
             .expect(404);
         });
       });

@@ -3,6 +3,7 @@ const request = require('supertest');
 const db = require('../../db/db');
 
 const { assert } = require('chai');
+const { response } = require('express');
 
 require("dotenv").config();
 const baseUrl = `${process.env.BASEURL}/auth`; 
@@ -59,8 +60,8 @@ function testAuth(app) {
             assert.equal(regUser.first_name, newUser.first_name);
             assert.equal(regUser.last_name, newUser.last_name);
             assert.equal(regUser.phone, newUser.phone);
-            // save new user guid for other test
-            newUser.guid = regUser.guid;
+            // save new user uuid for other test
+            newUser.uuid = regUser.uuid;
           });
       });
 
@@ -80,68 +81,62 @@ function testAuth(app) {
   
       it('log in user with matching email and password', async function() {
 
-        // const response = await request(app)
-        //   .post(`${baseUrl}/login`)
-        //   .send(logInUser)
-        //   .expect(200);
-        // expect(response.body).to.be.an.instanceOf(Object);
-        // const loginObj = response.body
-        // expect(loginObj).to.have.ownProperty('errors');
-        // expect(loginObj).to.have.ownProperty('user');
-        // assert.equal(loginObj.errors, false);
-        // const user = loginObj.user;
-        // // logInUser is just the email and password properties of NewUser
-        // // can use newUser here to compare property values
-        // assert.equal(user.first_name, newUser.first_name);
-        // assert.equal(user.last_name, newUser.last_name);
-        // assert.equal(user.phone, newUser.phone);
-        // assert.equal(user.email, newUser.email);
-        // assert.equal(user.guid, newUser.guid);
-
         const response = await request(app)
           .post(`${baseUrl}/login`)
           .send(logInUser)
-          .expect(302)
-          .then((response) => {            
-            assert.equal(response.text, 'Found. Redirecting to /products');
-          });
+          .expect(200);
+        expect(response.body).to.be.an.instanceOf(Object);
+        const loginObj = response.body
+        expect(loginObj).to.have.ownProperty('errors');
+        expect(loginObj).to.have.ownProperty('user');
+        assert.equal(loginObj.errors, false);
+        const user = loginObj.user;
+        // logInUser is just the email and password properties of NewUser
+        // can use newUser here to compare property values
+        assert.equal(user.first_name, newUser.first_name);
+        assert.equal(user.last_name, newUser.last_name);
+        assert.equal(user.phone, newUser.phone);
+        assert.equal(user.email, newUser.email);
+        assert.equal(user.uuid, newUser.uuid);
       });
 
-      // it('confirm user is logged in', async function () {
-      //   const response = await request(app)  
-      //     .get(`${baseUrl}/is_logged_in`)
-      //     .expect(200);
-      //   assert.equal(response.text, "User logged in");
-      // });
-
-      // it('confirm user is logged in', async function () {        
-      //   const response = await request(app)          
-      //     .get(`${baseUrl}/is_logged_in`)
-      //     .set('Accept', 'application/json')
-      //     .set('Content-Type', 'application/json')
-      //     .set('credentials', 'include');          
-      //   assert.equal(response.status, 200);
+      // it('goto profile for user who is logged in', async function () {
+      //   await request(app)
+      //     .get(`${baseUrl}/profile`)
+      //     .then((response) => {
+      //       assert.equal(response.text, 'Welcome to your profile');
+      //     });
       // });
 
     });
-  
+
+    // describe('get logged in user', function () {
+      
+    //   it('get user', async function () {
+    //     await request(app)
+    //       .get(`${baseUrl}/user`)
+    //       .expect(200);
+    //     const user = response.body
+    //     assert.equal(user.first_name, newUser.first_name);
+    //     assert.equal(user.last_name, newUser.last_name);
+    //     assert.equal(user.phone, newUser.phone);
+    //     assert.equal(user.email, newUser.email);
+    //     assert.equal(user.uuid, newUser.uuid);
+    //   })
+    // })
+
     describe('logout a user', function() {
 
       it('logout user', async function () {
         await request(app)
           .get(`${baseUrl}/logout`)
-          .expect(302)
-          .then((response) => {
-            assert.equal(response.text, 'Found. Redirecting to /login');
+          .expect(205)
+          .then((response) => {            
+            assert.equal(response.text, '');
           });
       });
 
       it('confirm user is not logged in', async function () {
-        // return await request(app)
-        //   .get(`${baseUrl}/is_logged_in`)
-        //   .then((response) => {
-        //     assert.equal(response.text, 'not logged in');
-        //   });        
         return await request(app)
           .get(`${baseUrl}/is_logged_in`)
           .expect(401);
@@ -153,9 +148,9 @@ function testAuth(app) {
       it('logout user who is not logged in', async function () {
         await request(app)
           .get(`${baseUrl}/logout`)
-          .expect(302)
-          .then((response) => {
-            assert.equal(response.text, 'Found. Redirecting to /login');
+          .expect(205)
+          .then((response) => {            
+            assert.equal(response.text, '');
           });
       });
 
@@ -163,7 +158,7 @@ function testAuth(app) {
         await request(app)
           .get(`${baseUrl}/profile`)
           .then((response) => {
-            assert.equal(response.text, 'Found. Redirecting to /login');
+            assert.equal(response.text, 'Unauthorized');
           });
       });
 
@@ -175,8 +170,8 @@ function testAuth(app) {
         return await request(app)
           .post(`${baseUrl}/login`)
           .send(invalidUser)
-          .then((response) => {
-            assert.equal(response.text, 'Found. Redirecting to /login');
+          .then((response) => {            
+            assert.equal(response.body.message, 'Incorrect username or password');
           });
       });
       
@@ -186,27 +181,10 @@ function testAuth(app) {
         return await request(app)
           .post(`${baseUrl}/login`)
           .send(invalidUser)
-          .then((response) => {
-            assert.equal(response.text, 'Found. Redirecting to /login');
+          .then((response) => {            
+            assert.equal(response.body.message, 'Incorrect username or password');
           });
       });
-
-      // it('cannot login with email not in database', async function () {
-      //   return await request(app)
-      //     .post(`${baseUrl}/login`)
-      //     .send(invalidUser)
-      //     .expect(401);
-      // });
-      
-      // it('cannot login with invalid password', async function() {
-      //   invalidUser.email = newUser.email;
-      //   invalidUser.password = 'INVALID';
-      //   return await request(app)
-      //     .post(`${baseUrl}/login`)
-      //     .send(invalidUser)
-      //     .expect(401);
-      // });     
-
     });
 
   });  

@@ -118,6 +118,14 @@ authRouter.get('/profile', isLoggedIn, (req, res) => {
   }
 });
 
+authRouter.get('/user', isLoggedIn, (req, res) => {
+  if (req.isAuthenticated()) {
+    res.status(200).send(req.user)
+  } else {
+    res.send(401);
+  }
+})
+
 authRouter.get('/is_logged_in', isLoggedIn, (req, res) => {
 
   // GET request - check if user is logged in

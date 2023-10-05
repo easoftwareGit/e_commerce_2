@@ -1,0 +1,14 @@
+.oneProductImage {  
+  width: 100%;  
+}
+
+@media (max-width: 575px) {
+  img {
+      width: 100px;
+  }
+}
+@media (min-width: 576px) and (max-width: 767px) {
+  img {
+      width: 150px;
+  }
+}

@@ -13,13 +13,13 @@ CREATE TABLE "public.users" (
 
 
 CREATE TABLE "public.products" (
-	"guid" uuid(36) NOT NULL UNIQUE,
+	"uuid" uuid(36) NOT NULL UNIQUE,
 	"name" varchar NOT NULL UNIQUE,
 	"category" varchar NOT NULL,
 	"price" DECIMAL NOT NULL,
 	"description" varchar NOT NULL,
 	"designer" varchar NOT NULL,
-	CONSTRAINT "products_pk" PRIMARY KEY ("guid")
+	CONSTRAINT "products_pk" PRIMARY KEY ("uuid")
 ) WITH (
   OIDS=FALSE
 );
@@ -43,7 +43,7 @@ CREATE TABLE "public.orders" (
 CREATE TABLE "public.order_items" (
 	"id" serial NOT NULL UNIQUE,
 	"order_id" integer NOT NULL,
-	"product_guid" uuid NOT NULL,
+	"product_uuid" uuid NOT NULL,
 	"quantity" integer NOT NULL,
 	"price_unit" DECIMAL NOT NULL,
 	CONSTRAINT "order_items_pk" PRIMARY KEY ("id")
@@ -68,7 +68,7 @@ CREATE TABLE "public.carts" (
 CREATE TABLE "public.cart_items" (
 	"id" serial NOT NULL UNIQUE,
 	"cart_id" integer NOT NULL,
-	"product_guid" uuid NOT NULL,
+	"product_uuid" uuid NOT NULL,
 	"quantity" integer NOT NULL,
 	CONSTRAINT "cart_items_pk" PRIMARY KEY ("id")
 ) WITH (
@@ -82,12 +82,12 @@ CREATE TABLE "public.cart_items" (
 ALTER TABLE "orders" ADD CONSTRAINT "orders_fk0" FOREIGN KEY ("user_id") REFERENCES "users"("id");
 
 ALTER TABLE "order_items" ADD CONSTRAINT "order_items_fk0" FOREIGN KEY ("order_id") REFERENCES "orders"("id");
-ALTER TABLE "order_items" ADD CONSTRAINT "order_items_fk1" FOREIGN KEY ("product_guid") REFERENCES "products"("guid");
+ALTER TABLE "order_items" ADD CONSTRAINT "order_items_fk1" FOREIGN KEY ("product_uuid") REFERENCES "products"("uuid");
 
 ALTER TABLE "carts" ADD CONSTRAINT "carts_fk0" FOREIGN KEY ("user_id") REFERENCES "users"("id");
 
 ALTER TABLE "cart_items" ADD CONSTRAINT "cart_items_fk0" FOREIGN KEY ("cart_id") REFERENCES "carts"("id");
-ALTER TABLE "cart_items" ADD CONSTRAINT "cart_items_fk1" FOREIGN KEY ("product_guid") REFERENCES "products"("guid");
+ALTER TABLE "cart_items" ADD CONSTRAINT "cart_items_fk1" FOREIGN KEY ("product_uuid") REFERENCES "products"("uuid");
 
 
 

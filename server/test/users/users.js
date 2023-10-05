@@ -11,9 +11,9 @@ const userCount = setupUsers.userCount;
 
 const { 
   usersTableName, 
-  guidColName,
+  uuidColName,
   emailColName,
-  users_guid_index_name,
+  users_uuid_index_name,
   users_email_index_name,
   cartsTableName,
   ordersTableName, 
@@ -26,10 +26,10 @@ const { afterEach } = require('mocha');
 require("dotenv").config();
 const baseUrl = `${process.env.BASEURL}/users`; 
 
-const user2Guid = '6714f724-f838-8f90-65a1-30359152dcdb';       // guid of 2nd user'
+const user2Uuid = '6714f724-f838-8f90-65a1-30359152dcdb';       // uuid of 2nd user'
 const user2Email = 'bill@gmail.com';
 const user2GoogleId = '123456789012345678902';
-const nonExistingGuid = '56d916ec-e6b5-0e62-9330-0248c6792316'; // 2nd product, not in users
+const nonExistingUuid = '56d916ec-e6b5-0e62-9330-0248c6792316'; // 2nd product, not in users
 
 function testUsers(app) {
 
@@ -83,9 +83,9 @@ function testUsers(app) {
         expect(doesExist).to.be.true;
       });
   
-      it('CREATE INDEX for users guid', async function () {
-        await setupUsers.createUsersIndex(users_guid_index_name, guidColName);    
-        const doesExist = await dbTools.indexExists(users_guid_index_name);
+      it('CREATE INDEX for users uuid', async function () {
+        await setupUsers.createUsersIndex(users_uuid_index_name, uuidColName);    
+        const doesExist = await dbTools.indexExists(users_uuid_index_name);
         expect(doesExist).to.be.true;
       });
 
@@ -117,7 +117,7 @@ function testUsers(app) {
           .expect(200);
         expect(response.body.length).to.be.equal(userCount);
         response.body.forEach((user) => {
-          expect(user).to.have.ownProperty('guid');
+          expect(user).to.have.ownProperty('uuid');
           expect(user).to.have.ownProperty('email');
           expect(user).to.have.ownProperty('password_hash');
           expect(user).to.have.ownProperty('first_name');
@@ -128,11 +128,11 @@ function testUsers(app) {
       });
     });
   
-    describe(`GET ${baseUrl}/:guid`, function() {      
+    describe(`GET ${baseUrl}/:uuid`, function() {      
   
       it('returns a single user object', async function() {
         const response = await request(app)
-          .get(`${baseUrl}/${user2Guid}`)
+          .get(`${baseUrl}/${user2Uuid}`)
           .expect(200);
         const user = response.body;
         expect(user).to.be.an.instanceOf(Object);
@@ -141,10 +141,10 @@ function testUsers(app) {
   
       it('returns a full user object', async function() {
         const response = await request(app)
-          .get(`${baseUrl}/${user2Guid}`)
+          .get(`${baseUrl}/${user2Uuid}`)
           .expect(200);
         const user = response.body;
-        expect(user).to.have.ownProperty('guid');
+        expect(user).to.have.ownProperty('uuid');
         expect(user).to.have.ownProperty('email');
         expect(user).to.have.ownProperty('password_hash');
         expect(user).to.have.ownProperty('first_name');
@@ -153,185 +153,185 @@ function testUsers(app) {
         expect(user).to.have.ownProperty('google');
       });
   
-      it('returned user has the correct guid', async function() {
+      it('returned user has the correct uuid', async function() {
         const response = await request(app)
-          .get(`${baseUrl}/${user2Guid}`)
+          .get(`${baseUrl}/${user2Uuid}`)
           .expect(200);
         const user = response.body;
-        expect(user.guid).to.be.an.equal(user2Guid);
+        expect(user.uuid).to.be.an.equal(user2Uuid);
       });
   
-      it('called with a invalid guid returns a 404 error', function() {
+      it('called with a invalid uuid returns a 404 error', function() {
         return request(app)
           .get(`${baseUrl}/ABC`)
           .expect(404);
       });
   
-      it('called with a non existing guid returns a 404 error', async function () {        
+      it('called with a non existing uuid returns a 404 error', async function () {        
         return await request(app)
-          .get(`${baseUrl}/${nonExistingGuid}`)        
+          .get(`${baseUrl}/${nonExistingUuid}`)        
           .expect(404);
       });
     });
 
-    describe(`Invalid GET (malformed guid) ${baseUrl}/:guid`, function () {
-      const getGuid = '56d916ec-e6b5-0e62-9330-0248c6792316'; // 2nd product
+    describe(`Invalid GET (malformed uuid) ${baseUrl}/:uuid`, function () {
+      const getUuid = '56d916ec-e6b5-0e62-9330-0248c6792316'; // 2nd product
      
-      describe(`Test first section of guid`, function () {
+      describe(`Test first section of uuid`, function () {
 
-        it('called with an invalid formatted guid (7 chars 1st section) returns a 404 error', async function () {
+        it('called with an invalid formatted uuid (7 chars 1st section) returns a 404 error', async function () {
           // only 7 chars in 1st section
-          const malformedGuid = '56d916e-e6b5-0e62-9330-0248c6792316';
+          const malformedUuid = '56d916e-e6b5-0e62-9330-0248c6792316';
           return await request(app)
-            .get(`${baseUrl}/${malformedGuid}`)
+            .get(`${baseUrl}/${malformedUuid}`)
             .expect(404);
         });
 
-        it('called with an invalid formatted guid (9 chars 1st section) returns a 404 error', async function () {
+        it('called with an invalid formatted uuid (9 chars 1st section) returns a 404 error', async function () {
           // 9 chars in 1st section
-          const malformedGuid = '56d916ecc-e6b5-0e62-9330-0248c6792316';
+          const malformedUuid = '56d916ecc-e6b5-0e62-9330-0248c6792316';
           return await request(app)
-            .get(`${baseUrl}/${malformedGuid}`)
+            .get(`${baseUrl}/${malformedUuid}`)
             .expect(404);
         });
 
-        it('called with an invalid formatted guid (non-hex 1st section) returns a 404 error', async function () {
+        it('called with an invalid formatted uuid (non-hex 1st section) returns a 404 error', async function () {
           // non hex char in 1st section
-          const malformedGuid = '56d96eQ-e6b5-0e62-9330-0248c6792316';
+          const malformedUuid = '56d96eQ-e6b5-0e62-9330-0248c6792316';
           return await request(app)
-            .get(`${baseUrl}/${malformedGuid}`)            
+            .get(`${baseUrl}/${malformedUuid}`)            
             .expect(404);
         });
 
       });
 
-      describe(`Test second section of guid`, function () {
+      describe(`Test second section of uuid`, function () {
 
-        it('called with an invalid formatted guid (3 chars 2nd section) returns a 404 error', async function () {
-          const malformedGuid = '56d916ec-e6b-0e62-9330-0248c6792316';
+        it('called with an invalid formatted uuid (3 chars 2nd section) returns a 404 error', async function () {
+          const malformedUuid = '56d916ec-e6b-0e62-9330-0248c6792316';
           return await request(app)
-            .get(`${baseUrl}/${malformedGuid}`)            
+            .get(`${baseUrl}/${malformedUuid}`)            
             .expect(404);
         });
 
-        it('called with an invalid formatted guid (5 chars 2nd section) returns a 404 error', async function () {
-          const malformedGuid = '56d916ec-e6b55-0e62-9330-0248c6792316';
+        it('called with an invalid formatted uuid (5 chars 2nd section) returns a 404 error', async function () {
+          const malformedUuid = '56d916ec-e6b55-0e62-9330-0248c6792316';
           return await request(app)
-            .get(`${baseUrl}/${malformedGuid}`)
+            .get(`${baseUrl}/${malformedUuid}`)
             .expect(404);
         });
 
-        it('called with an invalid formatted guid (non-hex 2nd section) returns a 404 error', async function () {
-          const malformedGuid = '56d916ec-e6bZ-0e62-9330-0248c6792316';
+        it('called with an invalid formatted uuid (non-hex 2nd section) returns a 404 error', async function () {
+          const malformedUuid = '56d916ec-e6bZ-0e62-9330-0248c6792316';
           return await request(app)
-            .get(`${baseUrl}/${malformedGuid}`)
-            .expect(404);
-        });
-
-      });
-
-      describe(`Test third section of guid`, function () {
-
-        it('called with an invalid formatted guid (3 chars 3rd section) returns a 404 error', async function () {
-          const malformedGuid = '56d916ec-e6b5-0e6-9330-0248c6792316';
-          return await request(app)
-            .get(`${baseUrl}/${malformedGuid}`)
-            .expect(404);
-        });
-
-        it('called with an invalid formatted guid (5 chars 3rd section) returns a 404 error', async function () {
-          const malformedGuid = '56d916ec-e6b5-0e622-9330-0248c6792316';
-          return await request(app)
-            .get(`${baseUrl}/${malformedGuid}`)            
-            .expect(404);
-        });
-
-        it('called with an invalid formatted guid (non-hex 3rd section) returns a 404 error', async function () {
-          const malformedGuid = '56d916ec-e6b5-0e6W-9330-0248c6792316';
-          return await request(app)
-            .get(`${baseUrl}/${malformedGuid}`)            
+            .get(`${baseUrl}/${malformedUuid}`)
             .expect(404);
         });
 
       });
 
-      describe(`Test forth section of guid`, function () {
+      describe(`Test third section of uuid`, function () {
 
-        it('called with an invalid formatted guid (3 chars 4th section) returns a 404 error', async function () {
-          const malformedGuid = '56d916ec-e6b5-0e62-933-0248c6792316';
+        it('called with an invalid formatted uuid (3 chars 3rd section) returns a 404 error', async function () {
+          const malformedUuid = '56d916ec-e6b5-0e6-9330-0248c6792316';
           return await request(app)
-            .get(`${baseUrl}/${malformedGuid}`)
+            .get(`${baseUrl}/${malformedUuid}`)
             .expect(404);
         });
 
-        it('called with an invalid formatted guid (5 chars 4th section) returns a 404 error', async function () {
-          const malformedGuid = '56d916ec-e6b5-0e62-93300-0248c6792316';
+        it('called with an invalid formatted uuid (5 chars 3rd section) returns a 404 error', async function () {
+          const malformedUuid = '56d916ec-e6b5-0e622-9330-0248c6792316';
           return await request(app)
-            .get(`${baseUrl}/${malformedGuid}`)            
+            .get(`${baseUrl}/${malformedUuid}`)            
             .expect(404);
         });
 
-        it('called with an invalid formatted guid (non-hex 4th section) returns a 404 error', async function () {
-          const malformedGuid = '56d916ec-e6b5-0e62-933P-0248c6792316';
+        it('called with an invalid formatted uuid (non-hex 3rd section) returns a 404 error', async function () {
+          const malformedUuid = '56d916ec-e6b5-0e6W-9330-0248c6792316';
           return await request(app)
-            .get(`${baseUrl}/${malformedGuid}`)            
-            .expect(404);
-        });
-
-      });
-
-      describe(`Test fifth section of guid`, function () {
-
-        it('called with an invalid formatted guid (11 chars 5th section) returns a 404 error', async function () {
-          const malformedGuid = '56d916ec-e6b5-0e62-9330-0248c679231';
-          return await request(app)
-            .get(`${baseUrl}/${malformedGuid}`)            
-            .expect(404);
-        });
-
-        it('called with an invalid formatted guid (13 chars 5th section) returns a 404 error', async function () {
-          const malformedGuid = '56d916ec-e6b5-0e62-9330-0248c67923166';
-          return await request(app)
-            .get(`${baseUrl}/${malformedGuid}`)            
-            .expect(404);
-        });
-
-        it('called with an invalid formatted guid (non-hex 5th section) returns a 404 error', async function () {
-          const malformedGuid = '56d916ec-e6b5-0e62-9330-0248c679231S';
-          return await request(app)
-            .get(`${baseUrl}/${malformedGuid}`)            
+            .get(`${baseUrl}/${malformedUuid}`)            
             .expect(404);
         });
 
       });
 
-      describe(`Test seperators of guid`, function () {
+      describe(`Test forth section of uuid`, function () {
 
-        it('called with an invalid formatted guid (no "-" at index [8]) returns a 404 error', async function () {
-          const malformedGuid = '56d916ec+e6b5-0e62-9330-0248c6792316';
+        it('called with an invalid formatted uuid (3 chars 4th section) returns a 404 error', async function () {
+          const malformedUuid = '56d916ec-e6b5-0e62-933-0248c6792316';
           return await request(app)
-            .get(`${baseUrl}/${malformedGuid}`)            
+            .get(`${baseUrl}/${malformedUuid}`)
             .expect(404);
         });
 
-        it('called with an invalid formatted guid (no "-" at index [13]) returns a 404 error', async function () {
-          const malformedGuid = '56d916ec-e6b5*0e62-9330-0248c6792316';
+        it('called with an invalid formatted uuid (5 chars 4th section) returns a 404 error', async function () {
+          const malformedUuid = '56d916ec-e6b5-0e62-93300-0248c6792316';
           return await request(app)
-            .get(`${baseUrl}/${malformedGuid}`)            
+            .get(`${baseUrl}/${malformedUuid}`)            
             .expect(404);
         });
 
-        it('called with an invalid formatted guid (no "-" at index [18]) returns a 404 error', async function () {
-          const malformedGuid = '56d916ec-e6b5-0e62+9330-0248c6792316';
+        it('called with an invalid formatted uuid (non-hex 4th section) returns a 404 error', async function () {
+          const malformedUuid = '56d916ec-e6b5-0e62-933P-0248c6792316';
           return await request(app)
-            .get(`${baseUrl}/${malformedGuid}`)            
+            .get(`${baseUrl}/${malformedUuid}`)            
             .expect(404);
         });
 
-        it('called with an invalid formatted guid (no "-" at index [18]) returns a 404 error', async function () {
-          const malformedGuid = '56d916ec-e6b5-0e62-9330=0248c6792316';
+      });
+
+      describe(`Test fifth section of uuid`, function () {
+
+        it('called with an invalid formatted uuid (11 chars 5th section) returns a 404 error', async function () {
+          const malformedUuid = '56d916ec-e6b5-0e62-9330-0248c679231';
           return await request(app)
-            .get(`${baseUrl}/${malformedGuid}`)            
+            .get(`${baseUrl}/${malformedUuid}`)            
+            .expect(404);
+        });
+
+        it('called with an invalid formatted uuid (13 chars 5th section) returns a 404 error', async function () {
+          const malformedUuid = '56d916ec-e6b5-0e62-9330-0248c67923166';
+          return await request(app)
+            .get(`${baseUrl}/${malformedUuid}`)            
+            .expect(404);
+        });
+
+        it('called with an invalid formatted uuid (non-hex 5th section) returns a 404 error', async function () {
+          const malformedUuid = '56d916ec-e6b5-0e62-9330-0248c679231S';
+          return await request(app)
+            .get(`${baseUrl}/${malformedUuid}`)            
+            .expect(404);
+        });
+
+      });
+
+      describe(`Test seperators of uuid`, function () {
+
+        it('called with an invalid formatted uuid (no "-" at index [8]) returns a 404 error', async function () {
+          const malformedUuid = '56d916ec+e6b5-0e62-9330-0248c6792316';
+          return await request(app)
+            .get(`${baseUrl}/${malformedUuid}`)            
+            .expect(404);
+        });
+
+        it('called with an invalid formatted uuid (no "-" at index [13]) returns a 404 error', async function () {
+          const malformedUuid = '56d916ec-e6b5*0e62-9330-0248c6792316';
+          return await request(app)
+            .get(`${baseUrl}/${malformedUuid}`)            
+            .expect(404);
+        });
+
+        it('called with an invalid formatted uuid (no "-" at index [18]) returns a 404 error', async function () {
+          const malformedUuid = '56d916ec-e6b5-0e62+9330-0248c6792316';
+          return await request(app)
+            .get(`${baseUrl}/${malformedUuid}`)            
+            .expect(404);
+        });
+
+        it('called with an invalid formatted uuid (no "-" at index [18]) returns a 404 error', async function () {
+          const malformedUuid = '56d916ec-e6b5-0e62-9330=0248c6792316';
+          return await request(app)
+            .get(`${baseUrl}/${malformedUuid}`)            
             .expect(404);
         });
 
@@ -515,12 +515,12 @@ function testUsers(app) {
 
     });
   
-    describe(`PUT ${baseUrl}/:guid (no google)`, function() {
-      const putUserGuid = user2Guid;
+    describe(`PUT ${baseUrl}/:uuid (no google)`, function() {
+      const putUserUuid = user2Uuid;
       const resetSqlCommand = `
         UPDATE users 
         SET email = 'bill@gmail.com', password_hash = 'abcdef', first_name = 'Bill', last_name = 'Smith', phone = '800-555-5555', google = '123456789012345678902'
-        WHERE guid = '${user2Guid}';`;
+        WHERE uuid = '${user2Uuid}';`;
       const testUser = {        
         email: "bob@email.com",
         password_hash: "zyxwvu",
@@ -530,7 +530,7 @@ function testUsers(app) {
         google: null
       };
 
-      describe(`Valid ${baseUrl}/:guid`, function() {
+      describe(`Valid ${baseUrl}/:uuid`, function() {
 
         before('before 1st PUT test', async function() {
           await db.query(resetSqlCommand);
@@ -545,30 +545,30 @@ function testUsers(app) {
           let updatedUser;      
           
           const response = await request(app)
-            .get(`${baseUrl}/${putUserGuid}`);
+            .get(`${baseUrl}/${putUserUuid}`);
           initialUser = response.body;          
           updatedUser = Object.assign({}, testUser);
-          updatedUser.guid = putUserGuid;
+          updatedUser.uuid = putUserUuid;
           const response_1 = await request(app)
-            .put(`${baseUrl}/${putUserGuid}`)
+            .put(`${baseUrl}/${putUserUuid}`)
             .send(updatedUser)
             .expect(200);
           expect(response_1.body).to.be.deep.equal(updatedUser);
         });
       });
   
-      describe(`Invalid PUT ${baseUrl}/:guid`, function() {
+      describe(`Invalid PUT ${baseUrl}/:uuid`, function() {
   
-        it('called with an invalid guid returns a 404 error', function() {
+        it('called with an invalid uuid returns a 404 error', function() {
           return request(app)
             .put(`${baseUrl}/ABC`)
             .send(testUser)
             .expect(404);
         });
   
-        it('called with a non existing guid returns a 404 error', async function () {
+        it('called with a non existing uuid returns a 404 error', async function () {
           return await request(app)
-            .put(`${baseUrl}/${nonExistingGuid}`)
+            .put(`${baseUrl}/${nonExistingUuid}`)
             .send(testUser)
             .expect(404);
         });
@@ -578,7 +578,7 @@ function testUsers(app) {
           const duplicateUser = Object.assign({}, testUser);
           duplicateUser.email = putDuplicateEmail;
           return request(app)
-            .put(`${baseUrl}/${putUserGuid}`)
+            .put(`${baseUrl}/${putUserUuid}`)
             .send(duplicateUser)
             .expect(404)
         });
@@ -589,7 +589,7 @@ function testUsers(app) {
           const missingDataUser = Object.assign({}, testUser);
           missingDataUser.first_name = null;
           return request(app)
-            .put(`${baseUrl}/${putUserGuid}`)
+            .put(`${baseUrl}/${putUserUuid}`)
             .send(missingDataUser)
             .expect(404)
         });
@@ -597,12 +597,12 @@ function testUsers(app) {
   
     });
 
-    describe(`PUT ${baseUrl}/:guid (with google)`, function() {
-      const putUserGuid = user2Guid;
+    describe(`PUT ${baseUrl}/:uuid (with google)`, function() {
+      const putUserUuid = user2Uuid;
       const resetSqlCommand = `
         UPDATE users 
         SET email = 'bill@gmail.com', password_hash = 'abcdef', first_name = 'Bill', last_name = 'Smith', phone = '800-555-5555', google = '123456789012345678902'
-        WHERE guid = '${user2Guid}';`;
+        WHERE uuid = '${user2Uuid}';`;
       const testUser = {        
         email: "bob@email.com",
         password_hash: "zyxwvu",
@@ -612,7 +612,7 @@ function testUsers(app) {
         google: '123456789012345678909'
       };
 
-      describe(`Valid ${baseUrl}/:guid`, function() {
+      describe(`Valid ${baseUrl}/:uuid`, function() {
 
         before('before 1st PUT test', async function() {
           await db.query(resetSqlCommand);
@@ -627,12 +627,12 @@ function testUsers(app) {
           let updatedUser;      
           
           const response = await request(app)
-            .get(`${baseUrl}/${putUserGuid}`);
+            .get(`${baseUrl}/${putUserUuid}`);
           initialUser = response.body;          
           updatedUser = Object.assign({}, testUser);
-          updatedUser.guid = putUserGuid;
+          updatedUser.uuid = putUserUuid;
           const response_1 = await request(app)
-            .put(`${baseUrl}/${putUserGuid}`)
+            .put(`${baseUrl}/${putUserUuid}`)
             .send(updatedUser)
             .expect(200);
           expect(response_1.body).to.be.deep.equal(updatedUser);
@@ -641,7 +641,7 @@ function testUsers(app) {
    
     });   
 
-    describe(`DELETE ${baseUrl}/:guid`, function() {
+    describe(`DELETE ${baseUrl}/:uuid`, function() {
       const toDelUser = {
         email: 'greg@email.com',
         password_hash: '098765',
@@ -649,7 +649,7 @@ function testUsers(app) {
         last_name: 'Blue',
         phone: '800 555-8888'
       }
-      let delUserGuid;
+      let delUserUuid;
   
       before('before DELETE tests, remove test user if needed', async function () {
         const sqlCommand = `
@@ -666,29 +666,29 @@ function testUsers(app) {
           VALUES ($1, $2, $3, $4, $5) RETURNING *;`;
         const response = await db.query(sqlCommand, rowValues);
         const postedUser = response.rows[0];
-        delUserGuid = postedUser.guid;
+        delUserUuid = postedUser.uuid;
       });
 
-      describe(`Valid deletes ${baseUrl}/:guid`, function() {
+      describe(`Valid deletes ${baseUrl}/:uuid`, function() {
         
         it('deletes a user', async function() {
           const response = await request(app)
-            .delete(`${baseUrl}/${delUserGuid}`)
+            .delete(`${baseUrl}/${delUserUuid}`)
             .expect(200);
-          const userGuid = response.text;
-          expect(userGuid).to.equal(delUserGuid);
+          const userUuid = response.text;
+          expect(userUuid).to.equal(delUserUuid);
         });      
       });
   
-      describe(`Invalid deletes ${baseUrl}/:guid`, function() {
+      describe(`Invalid deletes ${baseUrl}/:uuid`, function() {
   
         it('called with an user id that is not in database', async function() {
           return await request(app)
-            .delete(`${baseUrl}/${nonExistingGuid}`)
+            .delete(`${baseUrl}/${nonExistingUuid}`)
             .expect(404);
         });
   
-        it('called with a invalid user guid', function() {
+        it('called with a invalid user uuid', function() {
           return request(app)
             .delete(`${baseUrl}/ABC`)
             .expect(404);
@@ -708,7 +708,7 @@ function testUsers(app) {
 
     it('returns a full user object', async function () {
       const userObj = await findUserByEmail(user2Email);
-      expect(userObj).to.have.ownProperty('guid');
+      expect(userObj).to.have.ownProperty('uuid');
       expect(userObj).to.have.ownProperty('email');
       expect(userObj).to.have.ownProperty('password_hash');
       expect(userObj).to.have.ownProperty('first_name');
@@ -738,7 +738,7 @@ function testUsers(app) {
 
     it('returns a full user object', async function () {
       const userObj = await findUserByGoogleId(user2GoogleId);
-      expect(userObj).to.have.ownProperty('guid');
+      expect(userObj).to.have.ownProperty('uuid');
       expect(userObj).to.have.ownProperty('email');
       expect(userObj).to.have.ownProperty('password_hash');
       expect(userObj).to.have.ownProperty('first_name');

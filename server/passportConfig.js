@@ -65,10 +65,10 @@ module.exports = function (passport) {
   ));
 
   passport.serializeUser((user, done) => {
-    done(null, user.guid);    
+    done(null, user.uuid);    
   });
-  passport.deserializeUser( async (guid, done) => {  
-    const user = await userQuery.findUserByGuid(guid); 
+  passport.deserializeUser( async (uuid, done) => {  
+    const user = await userQuery.findUserByUuid(uuid); 
     if (user) {
       return done(null, user);
     } else {

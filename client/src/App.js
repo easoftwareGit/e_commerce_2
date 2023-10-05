@@ -1,28 +1,23 @@
-import React, { Fragment, useRef } from 'react';
+import React, { Fragment, useRef, useState } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 
-import Header from './components/Header';
+import Header from './components/Header/Header';
 
-import Products from './components/Products';
+import Products from './components/Products/Products';
+import OneProduct from './components/Products/OneProduct';
 import OrderHistory from './components/OrderHistory';
-import Cart from './components/Cart'
+import Cart from './components/Cart/Cart'
 import CheckOut from './components/CheckOut';
-import LogIn from './components/LogIn';
-import Register from './components/Register';
-import LogOut from './components/LogOut';
+import LogIn from './components/LogInOut/LogIn';
+import Register from './components/LogInOut/Register';
+import LogOut from './components/LogInOut/LogOut';
 import Home from './components/Home';
+import ProtectedRoute from './components/ProtectedRoute';
 
 import './App.css';
 import axios from 'axios';
-
-const rootStart = process.env.REACT_APP_DEVROOT;
-const pgHost = process.env.REACT_APP_PGHOST;
-const serverPort = process.env.REACT_APP_SERVER_PORT;
-const apiPath = process.env.REACT_APP_API;
-const baseApi = `${rootStart}${pgHost}:${serverPort}${apiPath}`;
-
-const clientPort = process.env.CLIENT_PORT;
-const clientBaseUrl = `${rootStart}${pgHost}:${clientPort}`;
+import { baseApi, clientBaseUrl } from './tools/tools';
 
 function App() {
 
@@ -33,18 +28,49 @@ function App() {
   // setActiveMenuItem is passed as a prop to child components
   // so child component can set the header active menu item
   const setActiveMenuItem = (menuItemId) => {
-    headerRef.current.setMenuItemActive(menuItemId);
+    if (headerRef && headerRef.current) {
+      headerRef.current.setMenuItemActive(menuItemId);
+    }
   }
 
-  const showRegisteredMenu = () => {    
-    headerRef.current.showRegisteredMenu()
+  const showRegisteredMenu = () => {
+    if (headerRef && headerRef.current) {
+      headerRef.current.showRegisteredMenu()
+    }
   }
 
   const showNotRegisteredMenu = () => {
-    headerRef.current.showNotRegisteredMenu()
+    if (headerRef && headerRef.current) {
+      headerRef.current.showNotRegisteredMenu()
+    }
+  }
+  
+  const selectorData = useSelector((state) => state.user.data)  
+  const [user, setUser] = useState({selectorData});
+
+  const getUserFromServer = async () => {
+    try {
+      const response = await axios({
+        method: 'get',
+        withCredentials: true,
+        url: `${baseApi}/auth/user`
+      });
+      if (response) {
+        return response.data
+      } else {            
+        return null
+      }      
+    } catch (err) {
+      if (err.response.status !== 401) { 
+        const errCode = err.response.status ? err.response.status : 'unknown'
+        const errMsg = err.response.data.message ? err.response.data.message : 'Unknown error'
+        console.log(`${errMsg} with code: ${errCode}`);
+      }    
+      return null
+    }
   }
 
-  const isLoggedIn = async () => {    
+  const isLoggedInTest = async () => {    
     try {
       const response = await axios({
         method: 'get',
@@ -67,30 +93,11 @@ function App() {
       document.getElementById("testData").value = "NOT Logged in"
       return false      
     }
-
-    // axios({
-    //   method: 'get',
-    //   withCredentials: true,
-    //   url: `${baseApi}/auth/is_logged_in`
-    // })
-    // .then((res) => {
-    //   document.getElementById("testData").value = "Yes, Logged in"
-    //   return true
-    // })
-    // .catch((err) => {
-    //   if (err.response.status !== 401) { 
-    //     const errCode = err.response.status ? err.response.status : 'unknown'
-    //     const errMsg = err.response.data.message ? err.response.data.message : 'Unknown error'
-    //     console.log(`${errMsg} with code: ${errCode}`);
-    //   }
-    //   document.getElementById("testData").value = "NOT Logged in"
-    //   return false
-    // })
   }
 
   const checkedLoggedIn = () => {
     let loggedInStatus = ""
-    const userloggedIn = isLoggedIn()
+    const userloggedIn = isLoggedInTest()
     if (userloggedIn) {
       loggedInStatus = "Yes, Logged in"
     } else {
@@ -99,35 +106,29 @@ function App() {
     document.getElementById("testData").value = loggedInStatus
   }  
 
-  // const loginTest = () => {
-  //   axios({
-  //     method: "post",
-  //     data: {
-  //       email: 'mike@email.com',
-  //       password: '7hxk@ZSOLdY%4AD'
-  //     },
-  //     withCredentials: true,
-  //     url: "http://localhost:5000/api/auth/login",
-  //   })
-  //     .then((res) => {
-  //       document.getElementById("testData").value = "Yes, Logged in"
-  //     })
-  //     .catch((err) => {
-  //       document.getElementById("testData").value = "NOT Logged in"
-  //       if (err.code === 'ERR_NETWORK') {
-  //         console.log("Could not connect to the network");
-  //       }
-  //       else if (err.response.status === 401) {
-  //         console.log("Incorrect email or password");
-  //       } else if (err.response.status === 500) {
-  //         console.log(err.response.data.message);
-  //       } else {
-  //         const errCode = err.response.status ? err.response.status : 'unknown'
-  //         const errMsg = err.response.data.message ? err.response.data.message : 'Unknown error'
-  //         console.log(`${errMsg} with code: ${errCode}`);
-  //       }
-  //     })
-  // }
+  const userServer = async () => {
+    const user = await getUserFromServer();
+    if (user) {
+      document.getElementById("testData").value = "Server - Name: " + user.first_name;
+    } else {
+      document.getElementById("testData").value = "NOT from server"
+    }
+  }
+  
+  const userState = () => {
+    setUser(selectorData)   
+    if (!selectorData) { 
+      document.getElementById("testData").value = "NOT from state"      
+    } else if (selectorData && selectorData.uuid) {
+      document.getElementById("testData").value = "State - Name: " + selectorData.first_name;
+      console.log(selectorData);
+    } else if (user && user.uuid) {
+      document.getElementById("testData").value = "State - Name: " + user.first_name;
+      console.log(user);    
+    } else {
+      document.getElementById("testData").value = "NOT from state"
+    }
+  }
 
   return (
     <Router>
@@ -136,7 +137,8 @@ function App() {
 
         <button onClick={checkedLoggedIn}>Test</button>        
         <input type="text" id="testData" name="testData" ></input>
-        {/* <button onClick={loginTest}>Login</button> */}
+        <button onClick={userServer}>User Server</button>
+        <button onClick={userState}>User State</button>
 
       </Fragment>
       <Routes>
@@ -144,40 +146,56 @@ function App() {
           path="/products"
           element={
             <Products
-              baseApi={baseApi}
-            />}
+              setActiveMenuItem={setActiveMenuItem}
+            />
+          }
         />
-        <Route path="/orderhistory" element={<OrderHistory />} />
-        <Route path="/cart" element={<Cart />} />
-        <Route path="/checkout" element={<CheckOut />} />
+        <Route
+          path='/products/:uuid'
+          element={
+            <OneProduct
+              getUserFromServer={getUserFromServer}
+            />
+          }
+        >          
+        </Route>
         <Route
           path="/login"
           element={
-            <LogIn
-              baseApi={baseApi}              
-              setActiveMenuItem={setActiveMenuItem}
-              showRegisteredMenu={showRegisteredMenu}            
+            <LogIn              
+              setActiveMenuItem={setActiveMenuItem} 
             />
           }
         />
         <Route
           path="/register"
           element={
-            <Register
-              baseApi={baseApi}
-              setActiveMenuItem={setActiveMenuItem}              
+            <Register              
+              setActiveMenuItem={setActiveMenuItem}
             />
           }
         />
         <Route
           path="/logout"
-          element={<LogOut
-            baseApi={baseApi}
+          element={<LogOut            
             setActiveMenuItem={setActiveMenuItem}
-            showNotRegisteredMenu={showNotRegisteredMenu}
-        />}
+          />}
         />
-        <Route exact path="/" element={<Home />} />
+        <Route
+          path="/"
+          element={<Home
+            setActiveMenuItem={setActiveMenuItem}
+          />}
+        />
+
+        <Route
+          path="/cart"
+          element={<ProtectedRoute element={<Cart />} />}  
+        />
+
+        <Route path="/orderhistory" element={<OrderHistory />} />
+        <Route path="/cart" element={<Cart />} />
+        <Route path="/checkout" element={<CheckOut />} />        
       </Routes>
     </Router>
   );

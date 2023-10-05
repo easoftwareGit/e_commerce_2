@@ -1,14 +1,16 @@
 import React, { forwardRef, useImperativeHandle, useState, useEffect } from "react";
+import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
-import MenuItems, { loginId, registerId, logoutId} from "./MenuItems";
+import MenuItems, { loginId, registerId, logoutId } from "../Header/MenuItems";
+
+const store = require('../../store/store');
 
 const Header2 = forwardRef((props, ref) => {
 
   const [navItems, setNavItems] = useState(MenuItems);
-  
-  // useEffect(() => {
-    
-  // }, [navItems.length])
+
+  const selectorData = useSelector((state) => state.user.data)
+  const [user, setUser] = useState({selectorData});
 
   // The component instance will be extended
   // with whatever you return from the callback passed
@@ -25,7 +27,7 @@ const Header2 = forwardRef((props, ref) => {
         showNotRegistered()
       }
     }
-  });
+  }); 
 
   const showNotRegistered = () => {
     const updatedNavItems = [...navItems];
@@ -63,6 +65,15 @@ const Header2 = forwardRef((props, ref) => {
     setNavItems(updatedNavItems);
   }
 
+  useEffect(() => {
+    setUser(selectorData)    
+    if (user) {
+      showNotRegistered()
+    } else {
+      showRegistered()
+    }
+  }, [selectorData])
+
   const handleClick = (navItem) => {
     setActive(navItem.id);
   }
@@ -79,7 +90,7 @@ const Header2 = forwardRef((props, ref) => {
   return (
     <nav className="navbar navbar-expand-lg navbar-dark bg-primary">
       <div className="container-fluid">
-        <a className="navbar-brand" href="/">My Website</a>
+        <Link className="navbar-brand" to="/">My Website</Link>
         <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
           <span className="navbar-toggler-icon"></span>
         </button>

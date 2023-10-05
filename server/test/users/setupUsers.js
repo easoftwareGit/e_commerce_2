@@ -7,7 +7,7 @@ const {
 
 const users = [
   {  
-    guid: '5bcefb5d-314f-ff1f-f5da-6521a2fa7bde',        
+    uuid: '5bcefb5d-314f-ff1f-f5da-6521a2fa7bde',        
     email: 'adam@email.com',
     password_hash: '123ABC',
     first_name: 'Adam',
@@ -16,7 +16,7 @@ const users = [
     google: '123456789012345678901'
   },
   {
-    guid: '6714f724-f838-8f90-65a1-30359152dcdb',
+    uuid: '6714f724-f838-8f90-65a1-30359152dcdb',
     email: 'bill@gmail.com',
     password_hash: 'abcdef',
     first_name: 'Bill',
@@ -25,7 +25,7 @@ const users = [
     google: '123456789012345678902'
   },
   {
-    guid: '516a1130-8398-3234-fc31-6e31fb695b85',
+    uuid: '516a1130-8398-3234-fc31-6e31fb695b85',
     email: 'chad@email.com',
     password_hash: 'HASHME',
     first_name: 'Chad',
@@ -34,7 +34,7 @@ const users = [
     google: null
   },
   {
-    guid: '5735c309-d480-3236-62da-31e13c35b91e',
+    uuid: '5735c309-d480-3236-62da-31e13c35b91e',
     email: 'doug@email.com',
     password_hash: 'QWERTY',
     first_name: 'Doug',
@@ -43,7 +43,7 @@ const users = [
     google: '123456789012345678903'
   },
 {
-    guid: 'a24894ed-10c5-dd83-5d5c-bbfea7ac6dca',
+    uuid: 'a24894ed-10c5-dd83-5d5c-bbfea7ac6dca',
     email: 'eric@email.com',
     password_hash: 'NOHASH',
     first_name: 'Eric',
@@ -51,7 +51,7 @@ const users = [
     phone: '800 555-1234'
   },
   {        
-    guid: '07de1192-9565-1794-87c7-a04759ff9866',
+    uuid: '07de1192-9565-1794-87c7-a04759ff9866',
     email: "fred@email.com",
     password_hash: "123456",
     first_name: "Fred",
@@ -87,7 +87,7 @@ function createUsersTable() {
   //  therefore phone and password_hash can be null. 
   //  error checking for these values is done at client level
   const sqlCreateTable = `CREATE TABLE IF NOT EXISTS ${usersTableName} (
-    "guid"          uuid      PRIMARY KEY DEFAULT gen_random_uuid(),
+    "uuid"          uuid      PRIMARY KEY DEFAULT gen_random_uuid(),
     "email"         varchar   NOT NULL UNIQUE,
     "password_hash" TEXT,
     "first_name"    varchar   NOT NULL,
@@ -104,14 +104,14 @@ function createUsersTable() {
 
 async function insertAllUsers() {
   const sqlCommand = `
-    INSERT INTO ${usersTableName} (guid, email, password_hash, first_name, last_name, phone, google) 
+    INSERT INTO ${usersTableName} (uuid, email, password_hash, first_name, last_name, phone, google) 
     VALUES ($1, $2, $3, $4, $5, $6, $7) 
     RETURNING *;`;
   try {
     for (let i = 0; i < users.length; i++) {
       const user = users[i];
-      const { guid, email, password_hash, first_name, last_name, phone, google } = user;
-      const rowValues = [guid, email, password_hash, first_name, last_name, phone, google];
+      const { uuid, email, password_hash, first_name, last_name, phone, google } = user;
+      const rowValues = [uuid, email, password_hash, first_name, last_name, phone, google];
       await db.query(sqlCommand, rowValues);
     }
     return users.length;

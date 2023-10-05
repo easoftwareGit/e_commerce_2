@@ -32,15 +32,15 @@ async function findUserByEmail(email) {
 };
 
 /**
- * finds one user by searching for a matching guid
+ * finds one user by searching for a matching uuid
  *
- * @param {String} guid
+ * @param {String} uuid
  * @return {Object|null} Object = User's data; mull = user not found
  */
-async function findUserByGuid(guid) {
-  const sqlCommand = `SELECT * FROM users WHERE guid = $1;`;
+async function findUserByUuid(uuid) {
+  const sqlCommand = `SELECT * FROM users WHERE uuid = $1;`;
   try {
-    const results = await db.query(sqlCommand, [guid]);
+    const results = await db.query(sqlCommand, [uuid]);
     if (db.validResultsAtLeast1Row(results)) {
       return results.rows[0];
     } else {
@@ -106,8 +106,8 @@ async function createUser(data) {
  */
 async function updateUser(data) {
   try {
-    const { guid, email, password_hash, first_name, last_name, phone, google } = data;
-    const rowValues = [email, password_hash, first_name, last_name, phone, google, guid];
+    const { uuid, email, password_hash, first_name, last_name, phone, google } = data;
+    const rowValues = [email, password_hash, first_name, last_name, phone, google, uuid];
     const sqlCommand = `
       UPDATE users
       SET email = $1, 
@@ -116,7 +116,7 @@ async function updateUser(data) {
           last_name = $4, 
           phone = $5,
           google = $6
-      WHERE guid = $7
+      WHERE uuid = $7
       RETURNING *;`;  
       const results = await db.query(sqlCommand, rowValues);
       if (db.validResultsAtLeast1Row(results)) {
@@ -155,7 +155,7 @@ async function createGoogleUser(data) {
 
 module.exports = { 
   findUserByEmail, 
-  findUserByGuid,
+  findUserByUuid,
   findUserByGoogleId,
   createUser,
   updateUser,

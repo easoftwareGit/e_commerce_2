@@ -1,14 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+
 import axios from 'axios';
-import { loginId } from './MenuItems';
+import { loginId } from '../Header/MenuItems';
 import { Modal } from 'bootstrap';
-import ModalMsg from './ModalMsg';
+import ModalMsg from '../ModalMsg';
+
+import { baseApi } from '../../tools/tools';
+
+import { userActions } from '../../store/users/usersSlice';
 
 const LogOut = props => {
 
-  const { baseApi, setActiveMenuItem, showNotRegisteredMenu } = props;
+  const { setActiveMenuItem } = props;
 
+  const dispatch = useDispatch()
   const navigate = useNavigate();
   
   const [modalInfo, setModalInfo] = useState({
@@ -33,9 +40,12 @@ const LogOut = props => {
         withCredentials: true,
         url: `${baseApi}/auth/logout`,
       });
-      if (response.status === 205) {        
-        navigate(loggedOutEnd);          
-        showNotRegisteredMenu();
+      if (response.status === 205) { 
+        // successfull logout
+
+        // remove user from redux store
+        dispatch(userActions.loggedOut());
+        navigate(loggedOutEnd);                  
         setActiveMenuItem(loginId);
       } else {
         console.log('Logout - Non error return, but not status 205');

@@ -1,16 +1,22 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import axios from 'axios';
-import { homeId } from './MenuItems';
 import { Modal } from 'bootstrap';
-import ModalMsg from './ModalMsg';
+import ModalMsg from '../ModalMsg';
+import { userActions } from '../../store/users/usersSlice';
+import { homeId, loginId } from '../Header/MenuItems';
+import { baseApi } from '../../tools/tools';
 
 const string = require("string-sanitizer");
 
 const LogIn = props => {
 
-  const { baseApi, setActiveMenuItem, showRegisteredMenu } = props;
+  const { setActiveMenuItem } = props;  
 
+  setActiveMenuItem(loginId);
+
+  const dispatch = useDispatch()
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -28,6 +34,7 @@ const LogIn = props => {
     title: "title",
     message: "message"
   })
+
   let sanitized = {}  
 
   const validateForm = () => {
@@ -79,7 +86,6 @@ const LogIn = props => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateForm()) { 
-
       try {
         const response = await axios({
           method: "post",
@@ -91,9 +97,11 @@ const LogIn = props => {
           url: `${baseApi}/auth/login`,
         });
         if (response.status === 200) {
-          // successfull login
-          navigate('/products'); 
-          showRegisteredMenu();
+          // successfull login    
+
+          // set user in redux store
+          dispatch(userActions.loggedIn(response.data.user));          
+          navigate('/products');           
           setActiveMenuItem(homeId);  
         } else {
           console.log('Login - Non error return, but not status 200');
@@ -110,14 +118,20 @@ const LogIn = props => {
             showModal("Internal Error", "Something went wrong");            
           }
         } else {
+          let errMsg = "Something went wrong"
+          let errTitle = "Internal Error"
           if (err.message) {
+            if (err.message === 'Network Error') {
+              errTitle = 'Network Error';
+              errMsg = 'Could not connect to the server';
+            }
             console.log(err.message)
           } else if (err.response.data.message) {
-            console.log(err.response.data.message)
+            console.log(err.response.data.message)            
           } else {
             console.log('Login - unknown error')
-          }
-          showModal("Internal Error", "Something went wrong");
+          }          
+          showModal(errTitle, errMsg);
         }          
       }
     } else {  
@@ -140,8 +154,8 @@ const LogIn = props => {
 
   return (
     <div>
-      <h2>Log In</h2>
-      <p>Log in to the web site</p>
+      <p className="h2 m-2">Log In</p>   
+      <p className='h6 m-2'>Log in to the web site</p>
 
       {/* modal popup message */}
       <ModalMsg
@@ -222,5 +236,4 @@ const LogIn = props => {
 
 // html for svg google icon
  
-
 export default LogIn;

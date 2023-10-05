@@ -1,3 +1,14 @@
+const rootStart = process.env.REACT_APP_DEVROOT;
+const pgHost = process.env.REACT_APP_PGHOST;
+const serverPort = process.env.REACT_APP_SERVER_PORT;
+const apiPath = process.env.REACT_APP_API;
+const clientPort = process.env.CLIENT_PORT;
+
+const clientBaseUrl = `${rootStart}${pgHost}:${clientPort}`;
+const baseApi = `${rootStart}${pgHost}:${serverPort}${apiPath}`;
+
+const imageBaseUrl = '/images/';
+
 // Create our number formatter.
 const formatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
@@ -8,6 +19,14 @@ const formatter = new Intl.NumberFormat('en-US', {
   //maximumFractionDigits: 0, // (causes 2500.99 to be printed as $2,501)
 });
 
-module.exports = {
-  formatter
+const asMoney = (num) => {
+  return Math.round((num + Number.EPSILON) * 100) / 100
+}
+
+module.exports = {  
+  clientBaseUrl,
+  baseApi,
+  imageBaseUrl,
+  formatter,
+  asMoney
 };

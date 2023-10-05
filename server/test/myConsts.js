@@ -1,63 +1,63 @@
 const usersTableName = 'users';
-const guidColName = 'guid';
+const uuidColName = 'uuid';
 const emailColName = 'email';
 const googleColName = 'google';
-const users_guid_index_name = 'users_guid_idx';
+const users_uuid_index_name = 'users_uuid_idx';
 const users_email_index_name = 'users_email_idx';
-const usersKeyColName = guidColName;
+const usersKeyColName = uuidColName;
 
 const productsTableName = 'products';
 const nameColName = 'name';
-const products_guid_index_name = 'products_guid_idx';
+const products_uuid_index_name = 'products_uuid_idx';
 const products_name_index_name = 'products_name_idx';
-const productsKeyColName = guidColName;
+const productsKeyColName = uuidColName;
 
 const cartsTableName = 'carts';
-const userGuidfkColName = 'user_guid';
-const cartsUserGuidForeignKeyName = cartsTableName + '_' + userGuidfkColName + '_fkey';
-const cartsKeyColName = guidColName;
+const userUuidfkColName = 'user_uuid';
+const cartsUserUuidForeignKeyName = cartsTableName + '_' + userUuidfkColName + '_fkey';
+const cartsKeyColName = uuidColName;
 
 const cartItemsTableName = 'cart_items';
-const cartGuidFkColName = 'cart_guid';
-const cartItemsCartsForeignKeyName = cartItemsTableName + '_' + cartGuidFkColName + '_fkey';
-const productsGuidFkColName = 'product_guid';
-const cartItemsProductGuidForeignKeyName = cartItemsTableName + '_' + productsGuidFkColName + '_fkey';
+const cartUuidFkColName = 'cart_uuid';
+const cartItemsCartsForeignKeyName = cartItemsTableName + '_' + cartUuidFkColName + '_fkey';
+const productsUuidFkColName = 'product_uuid';
+const cartItemsProductUuidForeignKeyName = cartItemsTableName + '_' + productsUuidFkColName + '_fkey';
 
 const ordersTableName = 'orders';
-const ordersUserGuidForeignKeyName = ordersTableName + '_' + userGuidfkColName + '_fkey';
-const ordersKeyColName = guidColName;
+const ordersUserUuidForeignKeyName = ordersTableName + '_' + userUuidfkColName + '_fkey';
+const ordersKeyColName = uuidColName;
 
 const orderItemsTableName = 'order_items';
-const orderGuidFkColName = 'order_guid';
-const ordersGuidForeignKeyName = orderItemsTableName + '_' + orderGuidFkColName + '_fkey';
-const ordersProductsGuidForeignKeyName = orderItemsTableName + '_' + productsGuidFkColName + '_fkey';
+const orderUuidFkColName = 'order_uuid';
+const ordersUuidForeignKeyName = orderItemsTableName + '_' + orderUuidFkColName + '_fkey';
+const ordersProductsUuidForeignKeyName = orderItemsTableName + '_' + productsUuidFkColName + '_fkey';
 
 module.exports = {
   usersTableName,
-  guidColName,
+  uuidColName,
   emailColName,
   googleColName,
-  users_guid_index_name,
+  users_uuid_index_name,
   users_email_index_name,
   usersKeyColName,
   productsTableName,
   nameColName,
-  products_guid_index_name,
+  products_uuid_index_name,
   products_name_index_name,
   productsKeyColName,
   cartsTableName,
-  userGuidfkColName,
-  cartsUserGuidForeignKeyName,
+  userUuidfkColName,
+  cartsUserUuidForeignKeyName,
   cartsKeyColName,
   cartItemsTableName,
   cartItemsCartsForeignKeyName,
-  productsGuidFkColName,
-  cartItemsProductGuidForeignKeyName,
+  productsUuidFkColName,
+  cartItemsProductUuidForeignKeyName,
   ordersTableName,
-  ordersUserGuidForeignKeyName,
+  ordersUserUuidForeignKeyName,
   ordersKeyColName,
   orderItemsTableName,
-  orderGuidFkColName,
-  ordersGuidForeignKeyName,
-  ordersProductsGuidForeignKeyName
+  orderUuidFkColName,
+  ordersUuidForeignKeyName,
+  ordersProductsUuidForeignKeyName
 };

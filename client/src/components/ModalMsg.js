@@ -2,7 +2,7 @@ import React from 'react';
 
 const ModalMsg = (props) => {
 
-  const { modalId, title, message } = props;
+  const { modalId, title, message, confirm, action, actionProps } = props;  
 
   return (
     <div
@@ -22,7 +22,22 @@ const ModalMsg = (props) => {
           </div>
           <div class="modal-body">{message}</div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+            {(confirm)
+              ? <div> 
+                  <button
+                    type="button"
+                    class="btn btn-success mx-3"
+                    id="yes-button"
+                    data-bs-dismiss="modal"
+                    onClick={() => action(actionProps)}
+                  >
+                    Yes
+                  </button>
+                  <button type="button" class="btn btn-danger" data-bs-dismiss="modal">No</button>
+                </div>
+              :
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal"> OK </button>}
+            {/* <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button> */}
           </div>
         </div>
       </div>

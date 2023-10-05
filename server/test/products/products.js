@@ -10,9 +10,9 @@ const productCount = setupProducts.productCount;
 
 const {
   productsTableName, 
-  guidColName,
+  uuidColName,
   nameColName,
-  products_guid_index_name,
+  products_uuid_index_name,
   products_name_index_name,
   cartItemsTableName,
   orderItemsTableName
@@ -24,7 +24,7 @@ const baseUrl = `${process.env.BASEURL}/products`;
 function testProducts(app) {
 
   describe(`${baseUrl} routes`, function() {
-    const nonexistingGuid = '56d916ec-e6b5-0e62-9330-0248c6792317'
+    const nonexistingUuid = '56d916ec-e6b5-0e62-9330-0248c6792317'
 
     describe('setup products table', function() {      
 
@@ -54,9 +54,9 @@ function testProducts(app) {
         expect(doesExist).to.be.true;
       });
 
-      it('CREATE INDEX for products guid', async function() {
-        await setupProducts.createProductsIndex(products_guid_index_name, guidColName);
-        const doesExist = await dbTools.indexExists(products_guid_index_name);
+      it('CREATE INDEX for products uuid', async function() {
+        await setupProducts.createProductsIndex(products_uuid_index_name, uuidColName);
+        const doesExist = await dbTools.indexExists(products_uuid_index_name);
         expect(doesExist).to.be.true;
       });
 
@@ -87,7 +87,7 @@ function testProducts(app) {
           .expect(200);
         expect(response.body.length).to.be.equal(productCount);
         response.body.forEach(product => {
-          expect(product).to.have.ownProperty("guid");
+          expect(product).to.have.ownProperty("uuid");
           expect(product).to.have.ownProperty("name");
           expect(product).to.have.ownProperty("category");
           expect(product).to.have.ownProperty("price");
@@ -97,7 +97,7 @@ function testProducts(app) {
       });
     });
 
-    describe(`GET ${baseUrl}/:guid`, function() {
+    describe(`GET ${baseUrl}/:uuid`, function() {
       const getProductId = '56d916ec-e6b5-0e62-9330-0248c6792316'; // 2nd product
 
       it('returns a single product object', async function() {
@@ -114,7 +114,7 @@ function testProducts(app) {
           .get(`${baseUrl}/${getProductId}`)
           .expect(200);
         const product = response.body;
-        expect(product).to.have.ownProperty('guid');
+        expect(product).to.have.ownProperty('uuid');
         expect(product).to.have.ownProperty('name');
         expect(product).to.have.ownProperty("category");
         expect(product).to.have.ownProperty("price");
@@ -122,23 +122,23 @@ function testProducts(app) {
         expect(product).to.have.ownProperty("designer");
     });
 
-      it('returned product has the correct guid', async function() {
+      it('returned product has the correct uuid', async function() {
         const response = await request(app)
           .get(`${baseUrl}/${getProductId}`)
           .expect(200);
         const product = response.body;
-        expect(product.guid).to.be.an.equal(getProductId);
+        expect(product.uuid).to.be.an.equal(getProductId);
       });
 
-      it('called with an invalid formatted guid returns a 404 error', function() {
+      it('called with an invalid formatted uuid returns a 404 error', function() {
         return request(app)
           .get(`${baseUrl}/ABC`)
           .expect(404);
       });
 
-      it('called with a non existing guid returns a 404 error', function () {        
+      it('called with a non existing uuid returns a 404 error', function () {        
         return request(app)
-          .get(`${baseUrl}/${nonexistingGuid}`)
+          .get(`${baseUrl}/${nonexistingUuid}`)
           .expect(404);
       });
     });
@@ -235,12 +235,12 @@ function testProducts(app) {
       });
     });
 
-    describe(`PUT ${baseUrl}/:guid`, function() {
-      const putProductGuid = '56d916ec-e6b5-0e62-9330-0248c6792316'; // 2nd product
+    describe(`PUT ${baseUrl}/:uuid`, function() {
+      const putProductUuid = '56d916ec-e6b5-0e62-9330-0248c6792316'; // 2nd product
       const resetSqlCommand = `
         UPDATE products 
         SET name = 'NORDVIKEN', category = 'Bar furniture', price = 475, description = 'Bar table, 140x80 cm', designer = 'Francis Cayouett'
-        WHERE id = ${putProductGuid};`
+        WHERE uuid = '${putProductUuid}';`
       const testProduct = {        
         name: "TESTNAME",
         category: "Testing",
@@ -249,14 +249,14 @@ function testProducts(app) {
         designer: 'Eric'
       };      
   
-      describe(`Valid ${baseUrl}/:guid`, function() {
+      describe(`Valid ${baseUrl}/:uuid`, function() {
 
-        before('before 1st PUT test', function() {
-          db.query(resetSqlCommand);
+        before('before 1st PUT test', async function() {
+          await db.query(resetSqlCommand);          
         });
   
-        afterEach('afterEach PUT test ', function() {      
-          db.query(resetSqlCommand);
+        afterEach('afterEach PUT test ', async function() {      
+          await db.query(resetSqlCommand);          
         });
 
         it('updates the correct product and returns it', async function() {
@@ -264,12 +264,12 @@ function testProducts(app) {
           let updatedProduct;      
 
           const response = await request(app)
-            .get(`${baseUrl}/${putProductGuid}`);
+            .get(`${baseUrl}/${putProductUuid}`);
           initialProduct = response.body;          
           updatedProduct = Object.assign({}, testProduct);
-          updatedProduct.guid = putProductGuid;
+          updatedProduct.uuid = putProductUuid;
           const response_1 = await request(app)
-            .put(`${baseUrl}/${putProductGuid}`)
+            .put(`${baseUrl}/${putProductUuid}`)
             .send(updatedProduct)
             .expect(200);
           // convert response_1.body.price to number BEFORE expect
@@ -278,7 +278,7 @@ function testProducts(app) {
         });
       });
 
-      describe(`Invalid PUT ${baseUrl}/:guid`, function() {
+      describe(`Invalid PUT ${baseUrl}/:uuid`, function() {
         const invalidProduct = {
           name: "TESTNAME",
           category: "Testing",
@@ -287,18 +287,18 @@ function testProducts(app) {
           designer: 'Eric'
         };
 
-        // full guid format testing is done in /test/users.js /api/users/guid section
+        // full uuid format testing is done in /test/users.js /api/users/uuid section
         
-        it('called with an invalid formatted guid returns a 404 error', async function() {
+        it('called with an invalid formatted uuid returns a 404 error', async function() {
           return await request(app)
             .put(`${baseUrl}/ABC`)
             .send(invalidProduct)
             .expect(404);
         });
 
-        it('called with a non existing guid returns a 404 error', async function() {
+        it('called with a non existing uuid returns a 404 error', async function() {
           return await request(app)
-            .put(`${baseUrl}/${nonexistingGuid}`)
+            .put(`${baseUrl}/${nonexistingUuid}`)
             .send(invalidProduct)
             .expect(404);
         });
@@ -310,7 +310,7 @@ function testProducts(app) {
           const duplicateProduct = Object.assign({}, invalidProduct);
           duplicateProduct.name = putDuplicateName;
           return request(app)
-            .put(`${baseUrl}/${putProductGuid}`)
+            .put(`${baseUrl}/${putProductUuid}`)
             .send(duplicateProduct)
             .expect(400)
         });
@@ -321,7 +321,7 @@ function testProducts(app) {
           const missingDataProduct = Object.assign({}, invalidProduct);
           missingDataProduct.name = null;
           return request(app)
-            .put(`${baseUrl}/${putProductGuid}`)
+            .put(`${baseUrl}/${putProductUuid}`)
             .send(missingDataProduct)
             .expect(400)
         });
@@ -329,7 +329,7 @@ function testProducts(app) {
 
     });
 
-    describe(`DELETE ${baseUrl}/:guid`, function() {
+    describe(`DELETE ${baseUrl}/:uuid`, function() {
       const toDelProduct = {
         name: "DELETEME",
         category: "Testing",
@@ -337,7 +337,7 @@ function testProducts(app) {
         description: "This is to ne deleted",
         designer: 'Eric'
       };
-      let delProductGuid;
+      let delProductUuid;
 
       before('before DELETE tests', async function() {
         const sqlCommand = `
@@ -347,25 +347,25 @@ function testProducts(app) {
         const rowValues = [name, category, price, description, designer];
         const response = await db.query(sqlCommand, rowValues);
         const postedProduct = response.rows[0];
-        delProductGuid = postedProduct.guid;
+        delProductUuid = postedProduct.uuid;
       });
 
-      describe(`Valid deletes ${baseUrl}/:guid`, function() {
+      describe(`Valid deletes ${baseUrl}/:uuid`, function() {
 
         it('deletes a product', async function() {
           const response = await request(app)
-            .delete(`${baseUrl}/${delProductGuid}`)
+            .delete(`${baseUrl}/${delProductUuid}`)
             .expect(200);
-          const productGuid = response.text;
-          expect(productGuid).to.equal(delProductGuid);
+          const productUuid = response.text;
+          expect(productUuid).to.equal(delProductUuid);
         });
       });
 
-      describe(`invalid deletes ${baseUrl}/:guid`, function() {
+      describe(`invalid deletes ${baseUrl}/:uuid`, function() {
 
-        it('called with an product guid that is not in database', function() {
+        it('called with an product uuid that is not in database', function() {
           return request(app)
-            .delete(`${baseUrl}/${nonexistingGuid}`)
+            .delete(`${baseUrl}/${nonexistingUuid}`)
             .expect(404);
         });
 

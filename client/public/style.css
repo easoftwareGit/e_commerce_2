@@ -13,22 +13,21 @@
   background-color: #ffffff !important;
 } 
 
-.productCol {
-  border-style: solid;
-  border-width: 1px;
-  border-color: red;
-  background-color: lightblue;
+.productCardImage {
+  max-height: 250px;
+  width: auto;
 }
 
-.thumbnailContainer {
-  width: 100px;
-  height: 100px;
-
-  border-style: solid;
-  border-width: 1px;
-  border-color: black;
+.productLink {
+  color: black;
+  text-decoration: none;  
+}
+.productLink:hover {
+  color: blue;
+  text-decoration: none;  
+}
+.productLink:visited {
+  color: black;
+  text-decoration: none;    
 }
 
-.productsTextContainer {
-  background-color: lightgreen;
-}

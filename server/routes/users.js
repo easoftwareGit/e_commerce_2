@@ -1,19 +1,19 @@
 const express = require('express');
 const usersRouter = express.Router();
 const db = require('../db/db');
-const { validateGuid } = require('./guidRegEx');
-const { findUserByGuid, updateUser } = require('../db/userQueries');
+const { validateUuid } = require('./uuidRegEx');
+const { findUserByUuid, updateUser } = require('../db/userQueries');
 
 /**
- * checks guid param,sets req.guid if guid param valid, else sets error
- * @param {String} - 'guid'; matches the route handler path variable (:guid)
- * @param {string} - guid - actual value of guid parameter in route path
+ * checks uuid param,sets req.uuid if uuid param valid, else sets error
+ * @param {String} - 'uuid'; matches the route handler path variable (:uuid)
+ * @param {string} - uuid - actual value of uuid parameter in route path
  */
 
-usersRouter.param('guid', (req, res, next, guid) => {
+usersRouter.param('uuid', (req, res, next, uuid) => {
   try {
-    if (validateGuid(guid)) {
-      req.guid = guid;
+    if (validateUuid(uuid)) {
+      req.uuid = uuid;
       next();
     } else {
       next(res.status(404).json('Invalid parameter'))
@@ -42,15 +42,15 @@ usersRouter.get('/', async (req, res) => {
   }
 });
 
-usersRouter.get('/:guid', async (req, res) => {
+usersRouter.get('/:uuid', async (req, res) => {
 
-  // GET request - get one user by guid
-  // path: localhost:5000/users/guid  
-  //  where guid is the guid code for the user
+  // GET request - get one user by uuid
+  // path: localhost:5000/users/uuid  
+  //  where uuid is the uuid code for the user
   // body: not used
 
   try {
-    const userRow = await findUserByGuid(req.guid);
+    const userRow = await findUserByUuid(req.uuid);
     if (userRow) {
       res.status(200).json(userRow);
     } else {
@@ -140,11 +140,11 @@ usersRouter.post('/google', async (req, res) => {
   }
 });
 
-usersRouter.put('/:guid', async (req, res) => {
+usersRouter.put('/:uuid', async (req, res) => {
 
   // PUT request
   // path: localhost:5000/users/#
-  //  where # is the guid code for the user
+  //  where # is the uuid code for the user
   // body: JSON object
   //  {
   //    "email": "user@email.com",
@@ -173,18 +173,18 @@ usersRouter.put('/:guid', async (req, res) => {
   }
 });
 
-usersRouter.delete('/:guid', async (req, res) => {
+usersRouter.delete('/:uuid', async (req, res) => {
 
   // DELETE request
   // path: localhost:5000/users/#
-  //  where # is the guid code for the user
+  //  where # is the uuid code for the user
   // body: not used
   
-  const sqlCommand = `DELETE FROM users WHERE guid = $1;`;
+  const sqlCommand = `DELETE FROM users WHERE uuid = $1;`;
   try {
-    const results = await db.query(sqlCommand, [req.guid]);
+    const results = await db.query(sqlCommand, [req.uuid]);
     if (results.rowCount === 1) {
-      res.status(200).send(`${req.guid}`);
+      res.status(200).send(`${req.uuid}`);
     } else {
       res.status(404).send(`User not found`);
     }

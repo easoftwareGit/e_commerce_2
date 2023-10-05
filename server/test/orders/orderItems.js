@@ -12,8 +12,8 @@ const orderItemsCount = setupOrderItems.orderItemsCount;
 
 const {
   orderItemsTableName,  
-  ordersGuidForeignKeyName, 
-  ordersProductsGuidForeignKeyName
+  ordersUuidForeignKeyName, 
+  ordersProductsUuidForeignKeyName
 } = require('../myConsts');
 
 require("dotenv").config();
@@ -22,17 +22,17 @@ const baseUrl = `${process.env.BASEURL}/orders`;
 function testOrderItems(app) {
 
   describe('/orders/items routes', function () {
-    const user1Guid = '5bcefb5d-314f-ff1f-f5da-6521a2fa7bde';       // guid of user #1
-    const user2Guid = '6714f724-f838-8f90-65a1-30359152dcdb';       // guid of user #2
-    const order1Guid = 'bbdedc95-c697-147e-5232-a23b2d5a4aa4';      // guid of order #1
-    const orderItem2Guid = 'e6710ea9-f1b4-8a55-0989-612ba83879a5'   // guid of order item #2
-    const product1Guid = 'fd99387c-33d9-c78a-ba29-0286576ddce5';    // guid of product #1
-    const product2Guid = '56d916ec-e6b5-0e62-9330-0248c6792316';    // guid of product #2    
-    const product4Guid = '467e51d7-1659-d2e4-12cb-c64a0d19ecb4';    // guid of product #4
+    const user1Uuid = '5bcefb5d-314f-ff1f-f5da-6521a2fa7bde';       // uuid of user #1
+    const user2Uuid = '6714f724-f838-8f90-65a1-30359152dcdb';       // uuid of user #2
+    const order1Uuid = 'bbdedc95-c697-147e-5232-a23b2d5a4aa4';      // uuid of order #1
+    const orderItem2Uuid = 'e6710ea9-f1b4-8a55-0989-612ba83879a5'   // uuid of order item #2
+    const product1Uuid = 'fd99387c-33d9-c78a-ba29-0286576ddce5';    // uuid of product #1
+    const product2Uuid = '56d916ec-e6b5-0e62-9330-0248c6792316';    // uuid of product #2    
+    const product4Uuid = '467e51d7-1659-d2e4-12cb-c64a0d19ecb4';    // uuid of product #4
     const product1Price = 265.99;
     const product2Price = 995.95;
     const product4Price = 69.99;
-    const nonexistingGuid = '56d916ec-e6b5-0e62-9330-0248c6792317';
+    const nonexistingUuid = '56d916ec-e6b5-0e62-9330-0248c6792317';
 
     describe('setup order_items table', function() {
 
@@ -49,12 +49,12 @@ function testOrderItems(app) {
       });
 
       it('check for orders FOREIGN KEY', async function() {        
-        const doesExist = await dbTools.foreignKeyExists(ordersGuidForeignKeyName);      
+        const doesExist = await dbTools.foreignKeyExists(ordersUuidForeignKeyName);      
         expect(doesExist).to.be.true;
       });
 
       it('check for products FOREIGN KEY', async function() {        
-        const doesExist = await dbTools.foreignKeyExists(ordersProductsGuidForeignKeyName);      
+        const doesExist = await dbTools.foreignKeyExists(ordersProductsUuidForeignKeyName);      
         expect(doesExist).to.be.true;
       });
 
@@ -66,21 +66,21 @@ function testOrderItems(app) {
     });
 
     describe('test orderQueries.createOrderItems()', function() {
-      let testOrderGuid;
-      let priorTestOrderGuid;
+      let testOrderUuid;
+      let priorTestOrderUuid;
       const testQuantity = 5;      
       const delTestOrderSqlCommand = `
         DELETE FROM orders
-        WHERE user_guid = '${user1Guid}'`;
+        WHERE user_uuid = '${user1Uuid}'`;
       const delTestOrderItemsSqlCommand = `
         DELETE FROM order_items
         WHERE quantity = ${testQuantity};`
 
       before('check orders leftover from prior tests', async function() {
-        const sqlCommand = `SELECT * FROM orders WHERE user_guid = $1`;
-        const results = await db.query(sqlCommand, [user1Guid]);
+        const sqlCommand = `SELECT * FROM orders WHERE user_uuid = $1`;
+        const results = await db.query(sqlCommand, [user1Uuid]);
         if (db.validResultsAtLeast1Row(results)) {
-          priorTestOrderGuid = results.rows[0].guid;
+          priorTestOrderUuid = results.rows[0].uuid;
         }
       });
 
@@ -99,17 +99,17 @@ function testOrderItems(app) {
           modified: dateNow,    
           status: 'Created',
           total_price: 42.95,
-          user_guid: user1Guid
+          user_uuid: user1Uuid
         };
         const sqlCommand = `
-          INSERT INTO orders (created, modified, status, total_price, user_guid) 
+          INSERT INTO orders (created, modified, status, total_price, user_uuid) 
           VALUES ($1, $2, $3, $4, $5) 
           RETURNING *`;
-        const { created, modified, status, total_price, user_guid } = order;
-        const rowValues = [created, modified, status, total_price, user_guid];
+        const { created, modified, status, total_price, user_uuid } = order;
+        const rowValues = [created, modified, status, total_price, user_uuid];
         const response = await db.query(sqlCommand, rowValues);
         const testOrder = response.rows[0];
-        testOrderGuid = testOrder.guid;        
+        testOrderUuid = testOrder.uuid;        
       });
 
       after('after orderQueries.createOrderItems(), remove test order items', async function() {
@@ -123,31 +123,31 @@ function testOrderItems(app) {
       it('test orderQueries.createOrderItems()', async function() {
         const testItems = [
           {            
-            product_guid: product1Guid,
+            product_uuid: product1Uuid,
             quantity: testQuantity,
             price_unit: product1Price
           },
           {           
-            product_guid: product2Guid,
+            product_uuid: product2Uuid,
             quantity: testQuantity,
             price_unit: product2Price
           },
           {           
-            product_guid: product4Guid,
+            product_uuid: product4Uuid,
             quantity: testQuantity,
             price_unit: product4Price
           }
         ];
         try {
-          const results = await orderQueries.createOrderItems(testOrderGuid, testItems);
+          const results = await orderQueries.createOrderItems(testOrderUuid, testItems);
           const createdItems = results.orderItems;          
           assert.equal(createdItems.length, testItems.length);
           for (let i = 0; i < testItems.length; i++) {
             const testItem = testItems[i];
-            const createdItemArray = createdItems.filter(item => item.product_guid === testItem.product_guid);
+            const createdItemArray = createdItems.filter(item => item.product_uuid === testItem.product_uuid);
             const createdItem = createdItemArray[0];
-            assert.equal(createdItem.order_guid, testOrderGuid);
-            assert.equal(createdItem.product_guid, testItem.product_guid);
+            assert.equal(createdItem.order_uuid, testOrderUuid);
+            assert.equal(createdItem.product_uuid, testItem.product_uuid);
             assert.equal(createdItem.quantity, testItem.quantity);
             assert.equal(createdItem.price_unit, testItem.price_unit);              
           }
@@ -159,10 +159,10 @@ function testOrderItems(app) {
     });
 
     describe('cannot DELETE order with order_items', function() {
-      let testOrderGuid;          
+      let testOrderUuid;          
       const testQuantity = 5;
       const resetOrderItemsSqlCommand = `DELETE FROM order_items WHERE quantity = ${testQuantity};`;
-      const resetOrdersSqlCommand = `DELETE FROM orders WHERE user_guid = '${user2Guid}'`;
+      const resetOrdersSqlCommand = `DELETE FROM orders WHERE user_uuid = '${user2Uuid}'`;
 
       before('before delete test order items, reset order items from prior tests', async function() {        
         await db.query(resetOrderItemsSqlCommand);
@@ -178,42 +178,42 @@ function testOrderItems(app) {
           modified: new Date("03/13/2023"),    
           status: 'Created',
           total_price: 39.97,
-          user_guid: user2Guid
+          user_uuid: user2Uuid
         };
         const sqlCommand = `
-          INSERT INTO orders (created, modified, status, total_price, user_guid) 
+          INSERT INTO orders (created, modified, status, total_price, user_uuid) 
           VALUES ($1, $2, $3, $4, $5) 
           RETURNING *`;
-        const { created, modified, status, total_price, user_guid } = order;
-        const rowValues = [created, modified, status, total_price, user_guid];
+        const { created, modified, status, total_price, user_uuid } = order;
+        const rowValues = [created, modified, status, total_price, user_uuid];
         const response = await db.query(sqlCommand, rowValues);
         const testOrder = response.rows[0];
-        testOrderGuid = testOrder.guid;
+        testOrderUuid = testOrder.uuid;
       });
 
       before('insert test order items', async function() {
         const items = [
           {
-            order_guid: testOrderGuid,
-            product_guid: product1Guid,
+            order_uuid: testOrderUuid,
+            product_uuid: product1Uuid,
             quantity: testQuantity,
             price_unit: product1Price
           },
           {
-            order_guid: testOrderGuid,
-            product_guid: product2Guid,
+            order_uuid: testOrderUuid,
+            product_uuid: product2Uuid,
             quantity: testQuantity,
             price_unit: product2Price
           }
         ];  
         const sqlCommand = `
-          INSERT INTO order_items (order_guid, product_guid, quantity, price_unit) 
+          INSERT INTO order_items (order_uuid, product_uuid, quantity, price_unit) 
           VALUES ($1, $2, $3, $4) 
           RETURNING *`;
         for (let i = 0; i < items.length; i++) {
           const item = items[i];
-          const { order_guid, product_guid, quantity, price_unit } = item;
-          const rowValues = [order_guid, product_guid, quantity, price_unit];
+          const { order_uuid, product_uuid, quantity, price_unit } = item;
+          const rowValues = [order_uuid, product_uuid, quantity, price_unit];
           await db.query(sqlCommand, rowValues);
         }
       });
@@ -227,7 +227,7 @@ function testOrderItems(app) {
       });
 
       it('test order exists before DELETE order', async function() {
-        const sqlCommand = `SELECT * FROM orders WHERE guid = '${testOrderGuid}'`;
+        const sqlCommand = `SELECT * FROM orders WHERE uuid = '${testOrderUuid}'`;
         const response = await db.query(sqlCommand);
         const doesExist = response.rows.length === 1;
         expect(doesExist).to.be.true;
@@ -235,7 +235,7 @@ function testOrderItems(app) {
 
       it('test order items exist before DELETE order', async function() {
         const itemsCount = 2;
-        const sqlCommand = `SELECT * FROM order_items WHERE order_guid = '${testOrderGuid}'`;
+        const sqlCommand = `SELECT * FROM order_items WHERE order_uuid = '${testOrderUuid}'`;
         const response = await db.query(sqlCommand);
         const doesExist = response.rows.length === itemsCount;
         expect(doesExist).to.be.true;
@@ -244,31 +244,31 @@ function testOrderItems(app) {
       it('try to DELETE order that has order_item(s)', async function () {
         // DO NOT USE baseUrl here
         return await request(app)
-          .delete(`/api/orders/${testOrderGuid}`)
+          .delete(`/api/orders/${testOrderUuid}`)
           .expect(409); // constraint error
       });
 
     });
 
-    describe(`/GET ${baseUrl}/:guid/items`, function() {      
+    describe(`/GET ${baseUrl}/:uuid/items`, function() {      
       const countForGetOrder = 2;
 
       it('returns an array', async function() {
         const response = await request(app)
-          .get(`${baseUrl}/${order1Guid}/items`)
+          .get(`${baseUrl}/${order1Uuid}/items`)
           .expect(200);
         expect(response.body).to.be.an.instanceOf(Array);
       });
 
       it('returns an array of all order_items', async function() {
         const response = await request(app)
-          .get(`${baseUrl}/${order1Guid}/items`)
+          .get(`${baseUrl}/${order1Uuid}/items`)
           .expect(200);
         expect(response.body.length).to.be.equal(countForGetOrder);
         response.body.forEach((order) => {
-          expect(order).to.have.ownProperty('guid');
-          expect(order).to.have.ownProperty('order_guid');
-          expect(order).to.have.ownProperty('product_guid');
+          expect(order).to.have.ownProperty('uuid');
+          expect(order).to.have.ownProperty('order_uuid');
+          expect(order).to.have.ownProperty('product_uuid');
           expect(order).to.have.ownProperty('quantity');
           expect(order).to.have.ownProperty('price_unit');
           expect(order).to.have.ownProperty('name');
@@ -279,34 +279,34 @@ function testOrderItems(app) {
         });
       });
 
-      it('returned order items have the correct order guid', async function() {
+      it('returned order items have the correct order uuid', async function() {
         const response = await request(app)
-          .get(`${baseUrl}/${order1Guid}/items`)
+          .get(`${baseUrl}/${order1Uuid}/items`)
           .expect(200);
         response.body.forEach((orderItem) => {
-          expect(orderItem.order_guid).to.be.equal(order1Guid);
+          expect(orderItem.order_uuid).to.be.equal(order1Uuid);
         });
       });
 
-      it('called with an invalid guid returns a 404 error', function() {
+      it('called with an invalid uuid returns a 404 error', function() {
         return request(app)
           .get(`${baseUrl}/ABC/items`)
           .expect(404);
       });
 
-      it('called with a non existing guid returns a 404 error', function() {
+      it('called with a non existing uuid returns a 404 error', function() {
         return request(app)
-          .get(`${baseUrl}/${nonexistingGuid}/items`)
+          .get(`${baseUrl}/${nonexistingUuid}/items`)
           .expect(404);
       });
 
     });
 
-    describe(`GET ${baseUrl}/items/:itemGuid`, function() {            
+    describe(`GET ${baseUrl}/items/:itemUuid`, function() {            
 
       it('returns a single order_item object', async function() {
         const response = await request(app)
-          .get(`${baseUrl}/items/${orderItem2Guid}`)
+          .get(`${baseUrl}/items/${orderItem2Uuid}`)
           .expect(200);
         const item = response.body;
         expect(item).to.be.an.instanceOf(Object);
@@ -315,53 +315,53 @@ function testOrderItems(app) {
 
       it('returns a full order_item object', async function() {
         const response = await request(app)
-          .get(`${baseUrl}/items/${orderItem2Guid}`)
+          .get(`${baseUrl}/items/${orderItem2Uuid}`)
           .expect(200);
         const item = response.body;
-        expect(item).to.have.ownProperty('guid');
-        expect(item).to.have.ownProperty('order_guid');
-        expect(item).to.have.ownProperty('product_guid');
+        expect(item).to.have.ownProperty('uuid');
+        expect(item).to.have.ownProperty('order_uuid');
+        expect(item).to.have.ownProperty('product_uuid');
         expect(item).to.have.ownProperty('quantity');
         expect(item).to.have.ownProperty('price_unit');
       });
 
-      it('returned order_item has the correct guid', async function() {
+      it('returned order_item has the correct uuid', async function() {
         const response = await request(app)
-          .get(`${baseUrl}/items/${orderItem2Guid}`)
+          .get(`${baseUrl}/items/${orderItem2Uuid}`)
           .expect(200);
         const item = response.body;
-        expect(item.guid).to.be.an.equal(orderItem2Guid);
+        expect(item.uuid).to.be.an.equal(orderItem2Uuid);
       });
 
-      it('called with an invalid guid returns a 404 error', function() {
+      it('called with an invalid uuid returns a 404 error', function() {
         return request(app)
           .get(`${baseUrl}/items/ABC`)
           .expect(404);
       });
 
-      it('called with a non existing guid returns a 404 error', function() {
+      it('called with a non existing uuid returns a 404 error', function() {
         return request(app)
-          .get(`${baseUrl}/items/${nonexistingGuid}`)
+          .get(`${baseUrl}/items/${nonexistingUuid}`)
           .expect(404);
       });
     });
 
-    describe(`POST ${baseUrl}/:guid/items`, function() {                  
+    describe(`POST ${baseUrl}/:uuid/items`, function() {                  
       const testQuantity = 5
       const newItem = {    
-        product_guid: product2Guid,      
+        product_uuid: product2Uuid,      
         quantity: testQuantity,
         price_unit: product2Price
       };
       const invalidItem = {    
-        product_guid: nonexistingGuid,  
+        product_uuid: nonexistingUuid,  
         quantity: testQuantity,
         price_unit: product2Price
       };
 
       const resetSqlCommand = `
         DELETE FROM order_items
-        WHERE product_guid = '${product2Guid}';`
+        WHERE product_uuid = '${product2Uuid}';`
 
       before('before first POST test', async function() {
         await db.query(resetSqlCommand);
@@ -373,43 +373,43 @@ function testOrderItems(app) {
 
       it('post a new order item with valid data', async function() {
         const response = await request(app)
-          .post(`${baseUrl}/${order1Guid}/items`)
+          .post(`${baseUrl}/${order1Uuid}/items`)
           .send(newItem)
           .expect(201);
         const postedItem = response.body;
-        assert.equal(postedItem.order_guid, order1Guid);
-        assert.equal(postedItem.product_guid, newItem.product_guid);
+        assert.equal(postedItem.order_uuid, order1Uuid);
+        assert.equal(postedItem.product_uuid, newItem.product_uuid);
         assert.equal(postedItem.quantity, newItem.quantity);
         assert.equal(postedItem.price_unit, newItem.price_unit);
       });
     
-      it('did NOT post order item with a non-existant order_guid', async function() {
+      it('did NOT post order item with a non-existant order_uuid', async function() {
         return await request(app)
-          .post(`${baseUrl}/${nonexistingGuid}/items`)
+          .post(`${baseUrl}/${nonexistingUuid}/items`)
           .send(invalidItem)
           .expect(409);
       });
 
-      it('did NOT post order item with a non-existant product_guid', async function() {
+      it('did NOT post order item with a non-existant product_uuid', async function() {
         return await request(app)
-          .post(`${baseUrl}/${order1Guid}/items`)
+          .post(`${baseUrl}/${order1Uuid}/items`)
           .send(invalidItem)
           .expect(409);
       });
 
-      it('did NOT post order item with no product_guid', async function() {
-        invalidItem.product_guid = null;
+      it('did NOT post order item with no product_uuid', async function() {
+        invalidItem.product_uuid = null;
         return await request(app)
-          .post(`${baseUrl}/${order1Guid}/items`)
+          .post(`${baseUrl}/${order1Uuid}/items`)
           .send(invalidItem)
           .expect(400);
       });
 
       it('did NOT post order item with no quantity', async function() {
-        invalidItem.product_guid = product2Guid;
+        invalidItem.product_uuid = product2Uuid;
         invalidItem.quantity = null;
         return await request(app)
-          .post(`${baseUrl}/${order1Guid}/items`)
+          .post(`${baseUrl}/${order1Uuid}/items`)
           .send(invalidItem)
           .expect(400);
       });
@@ -418,25 +418,25 @@ function testOrderItems(app) {
         invalidItem.quantity = 5;
         invalidItem.price_unit = null;
         return await request(app)
-          .post(`${baseUrl}/${order1Guid}/items`)
+          .post(`${baseUrl}/${order1Uuid}/items`)
           .send(invalidItem)
           .expect(400);
       });
 
     });
 
-    describe(`PUT ${baseUrl}/items/:itemGuid`, function() {            
+    describe(`PUT ${baseUrl}/items/:itemUuid`, function() {            
       const resetSqlCommand = `
         UPDATE order_items
-        SET order_guid = '${order1Guid}', product_guid = '${product4Guid}', quantity = 1, price_unit = 3.99
-        WHERE guid = '${orderItem2Guid}';`;
+        SET order_uuid = '${order1Uuid}', product_uuid = '${product4Uuid}', quantity = 1, price_unit = 3.99
+        WHERE uuid = '${orderItem2Uuid}';`;
       const testItem = {
-        product_guid: product4Guid,
+        product_uuid: product4Uuid,
         quantity: 8,
         price_unit: product4Price
       }
 
-      describe(`Valid ${baseUrl}/items/:itemGuid`, function() {
+      describe(`Valid ${baseUrl}/items/:itemUuid`, function() {
 
         before('before 1st PUT test', async function() {
           await db.query(resetSqlCommand);
@@ -451,59 +451,59 @@ function testOrderItems(app) {
           let updatedItem;
 
           const response = await request(app)
-            .get(`${baseUrl}/items/${orderItem2Guid}`);
+            .get(`${baseUrl}/items/${orderItem2Uuid}`);
           initialItem = response.body;
           updatedItem = Object.assign({}, testItem);
-          updatedItem.order_guid = order1Guid;
+          updatedItem.order_uuid = order1Uuid;
           const response_1 = await request(app)
-            .put(`${baseUrl}/items/${orderItem2Guid}`)
+            .put(`${baseUrl}/items/${orderItem2Uuid}`)
             .send(updatedItem)
             .expect(200);
           const resturnedItem = response_1.body;
-          assert.equal(resturnedItem.guid, orderItem2Guid);
-          assert.equal(resturnedItem.order_guid, updatedItem.order_guid);
-          assert.equal(resturnedItem.product_guid, updatedItem.product_guid);
+          assert.equal(resturnedItem.uuid, orderItem2Uuid);
+          assert.equal(resturnedItem.order_uuid, updatedItem.order_uuid);
+          assert.equal(resturnedItem.product_uuid, updatedItem.product_uuid);
           assert.equal(resturnedItem.quantity, updatedItem.quantity);
           assert.equal(resturnedItem.price_unit, updatedItem.price_unit);
         });
       });
 
-      describe(`Invalid ${baseUrl}/:guid/items/:itemGuid`, function() {
+      describe(`Invalid ${baseUrl}/:uuid/items/:itemUuid`, function() {
         const testItem = {
-          product_guid: product1Guid,
+          product_uuid: product1Uuid,
           quantity: 4,
           price_unit: 3.99
         };
 
-        it('called with an invalid guid returns a 404 error', function() {
+        it('called with an invalid uuid returns a 404 error', function() {
           return request(app)
             .put(`${baseUrl}/items/ABC`)
             .send(testItem)
             .expect(404)
         });
 
-        it('called with a non existing guid returns a 404 error', function() {
+        it('called with a non existing uuid returns a 404 error', function() {
           return request(app)
-            .put(`${baseUrl}/items/${nonexistingGuid}`)
+            .put(`${baseUrl}/items/${nonexistingUuid}`)
             .send(testItem)
             .expect(404)
         });
 
-        it('did not put with non existing product_guid', async function() {
+        it('did not put with non existing product_uuid', async function() {
           const invalidItem = Object.assign({}, testItem);
-          invalidItem.product_guid = nonexistingGuid;
+          invalidItem.product_uuid = nonexistingUuid;
           return await request(app)
-            .put(`${baseUrl}/items/${orderItem2Guid}`)
+            .put(`${baseUrl}/items/${orderItem2Uuid}`)
             .send(invalidItem)
             .expect(409)
         });
 
         // other tests for missing data performed in POST tests 
-        it('did not put with a missing product_guid', async function() {
+        it('did not put with a missing product_uuid', async function() {
           const invalidItem = Object.assign({}, testItem);
-          invalidItem.product_guid = null;
+          invalidItem.product_uuid = null;
           return await request(app)
-            .put(`${baseUrl}/items/${orderItem2Guid}`)
+            .put(`${baseUrl}/items/${orderItem2Uuid}`)
             .send(invalidItem)
             .expect(400)
         });
@@ -511,106 +511,106 @@ function testOrderItems(app) {
       });        
     });
 
-    describe(`DELETE ${baseUrl}/items/:itemGuid`, function() {            
+    describe(`DELETE ${baseUrl}/items/:itemUuid`, function() {            
       const testQuantity = 5;
       const toDelItem = {
-        product_guid: product1Guid,
+        product_uuid: product1Uuid,
         quantity: testQuantity,
         price_unit: product1Price
       };
-      let delItemGuid;
+      let delItemUuid;
 
-      before(`before DELETE ${baseUrl}/items/:itemGuid tests`, async function() {
+      before(`before DELETE ${baseUrl}/items/:itemUuid tests`, async function() {
         const sqlCommand = `
-          INSERT INTO order_items (order_guid, product_guid, quantity, price_unit) 
+          INSERT INTO order_items (order_uuid, product_uuid, quantity, price_unit) 
           VALUES ($1, $2, $3, $4) RETURNING *`;
-        const rowValues = [order1Guid, toDelItem.product_guid, toDelItem.quantity, toDelItem.price_unit ]
+        const rowValues = [order1Uuid, toDelItem.product_uuid, toDelItem.quantity, toDelItem.price_unit ]
         const response = await db.query(sqlCommand, rowValues);
         const postedItem = response.rows[0];
-        delItemGuid = postedItem.guid;
+        delItemUuid = postedItem.uuid;
       });
 
-      after(`after DELETE ${baseUrl}/items/:itemGuid tests`, async function() {
-        const sqlCommand = `DELETE FROM order_items WHERE guid = '${delItemGuid}'`;
+      after(`after DELETE ${baseUrl}/items/:itemUuid tests`, async function() {
+        const sqlCommand = `DELETE FROM order_items WHERE uuid = '${delItemUuid}'`;
         return await db.query(sqlCommand);
       });
 
-      describe(`Valid DELETE ${baseUrl}/items/:itemGuid`, function() {
+      describe(`Valid DELETE ${baseUrl}/items/:itemUuid`, function() {
 
         it('deletes an order item', async function() {
           const response = await request(app)
-            .delete(`${baseUrl}/items/${delItemGuid}`)
+            .delete(`${baseUrl}/items/${delItemUuid}`)
             .expect(200)
-          const itemGuid = response.text;
-          expect(itemGuid).to.equal(delItemGuid);
+          const itemUuid = response.text;
+          expect(itemUuid).to.equal(delItemUuid);
         });
       });
 
-      describe(`Invalid DELETE ${baseUrl}/items/:itemGuid`, function() {
+      describe(`Invalid DELETE ${baseUrl}/items/:itemUuid`, function() {
 
-        it('called with an invalid guid returns a 404 error', function() {
+        it('called with an invalid uuid returns a 404 error', function() {
           return request(app)
             .delete(`${baseUrl}/items/ABC`)          
             .expect(404)
         });
 
-        it('called with a non existing guid returns a 404 error', function() {
+        it('called with a non existing uuid returns a 404 error', function() {
           return request(app)
-            .delete(`${baseUrl}/items/${nonexistingGuid}`)          
+            .delete(`${baseUrl}/items/${nonexistingUuid}`)          
             .expect(404)
         });        
       });    
     });
 
-    describe(`DELETE ${baseUrl}/:guid/allItems`, function() {
-      let testOrderGuid;
+    describe(`DELETE ${baseUrl}/:uuid/allItems`, function() {
+      let testOrderUuid;
       const toDelOrder = {
         created: new Date("05/15/2023"),
         modified: new Date("05/15/2323"),    
         status: 'Created',
         total_price: 120.95,
-        user_guid: user2Guid
+        user_uuid: user2Uuid
       }
       const toDelItems = [
         {
-          product_guid: product1Guid,
+          product_uuid: product1Uuid,
           quantity: 3,
           price_unit: product1Price
         },
         {
-          product_guid: product2Guid,
+          product_uuid: product2Uuid,
           quantity: 1,
           price_unit: product2Price
         },
         {
-          product_guid: product4Guid,
+          product_uuid: product4Uuid,
           quantity: 2,
           price_unit: product4Price
         },
       ];
 
-      before(`before DELETE ${baseUrl}/:guid/allItems, insert test order`, async function() {
+      before(`before DELETE ${baseUrl}/:uuid/allItems, insert test order`, async function() {
         const sqlCommand = `
-          INSERT INTO orders (created, modified, status, total_price, user_guid) 
+          INSERT INTO orders (created, modified, status, total_price, user_uuid) 
           VALUES ($1, $2, $3, $4, $5) 
           RETURNING *;`;
-        const { created, modified, status, total_price, user_guid } = toDelOrder;
-        const rowValues = [created, modified, status, total_price, user_guid];
+        const { created, modified, status, total_price, user_uuid } = toDelOrder;
+        const rowValues = [created, modified, status, total_price, user_uuid];
         const response = await db.query(sqlCommand, rowValues);
         const testOrder = response.rows[0];
-        testOrderGuid = testOrder.guid;
+        testOrderUuid = testOrder.uuid;
       });
 
-      before(`before DELETE ${baseUrl}/:guid/allItems, insert test order_items`, async function() {
+      before(`before DELETE ${baseUrl}/:uuid/allItems, insert test order_items`, async function() {
         const sqlCommand = `
-          INSERT INTO order_items (order_guid, product_guid, quantity, price_unit) 
+          INSERT INTO order_items (order_uuid, product_uuid, quantity, price_unit) 
           VALUES ($1, $2, $3, $4) 
           RETURNING *;`;
         try {
           for (let i = 0; i < toDelItems.length; i++) {
             const item = toDelItems[i];
-            const { product_guid, quantity, price_unit } = item;
-            const rowValues = [testOrderGuid, product_guid, quantity, price_unit];
+            const { product_uuid, quantity, price_unit } = item;
+            const rowValues = [testOrderUuid, product_uuid, quantity, price_unit];
             await db.query(sqlCommand, rowValues);
           }
           return toDelItems.length;
@@ -619,38 +619,38 @@ function testOrderItems(app) {
         }
       });
 
-      after(`after DELETE ${baseUrl}/:guid/allItems, remove test order_items`, async function() {
-        const sqlCommand = `DELETE FROM order_items WHERE order_guid = '${testOrderGuid}'`;
+      after(`after DELETE ${baseUrl}/:uuid/allItems, remove test order_items`, async function() {
+        const sqlCommand = `DELETE FROM order_items WHERE order_uuid = '${testOrderUuid}'`;
         await db.query(sqlCommand);
       });
 
-      after(`after DELETE ${baseUrl}/:guid/allItems, remove test order`, async function() {
-        const sqlCommand = `DELETE FROM orders WHERE guid = '${testOrderGuid}'`;
+      after(`after DELETE ${baseUrl}/:uuid/allItems, remove test order`, async function() {
+        const sqlCommand = `DELETE FROM orders WHERE uuid = '${testOrderUuid}'`;
         await db.query(sqlCommand);
       });
 
-      describe(`Valid DELETE ${baseUrl}/:guid/allItems`, function() {
+      describe(`Valid DELETE ${baseUrl}/:uuid/allItems`, function() {
 
         it('deletes all order items from an order', async function() {
           const response = await request(app)
-            .delete(`${baseUrl}/${testOrderGuid}/allItems`)
+            .delete(`${baseUrl}/${testOrderUuid}/allItems`)
             .expect(200);
-          const itemGuid = response.text;
-          expect(itemGuid).to.equal(testOrderGuid);
+          const itemUuid = response.text;
+          expect(itemUuid).to.equal(testOrderUuid);
         });
       });
 
-      describe(`Invalid DELETE ${baseUrl}/:guid/allItems`, function() {
+      describe(`Invalid DELETE ${baseUrl}/:uuid/allItems`, function() {
 
-        it('called with an invalid guid returns a 404 error', function() {
+        it('called with an invalid uuid returns a 404 error', function() {
           return request(app)
             .delete(`${baseUrl}/ABC/allItems`)        
             .expect(404)
         });
 
-        it('called with a non existing guid returns a 404 error', function() {
+        it('called with a non existing uuid returns a 404 error', function() {
           return request(app)
-            .delete(`${baseUrl}/${nonexistingGuid}/allItems`)          
+            .delete(`${baseUrl}/${nonexistingUuid}/allItems`)          
             .expect(404)
         });        
       });

@@ -3,18 +3,18 @@ const cartsRouter = express.Router();
 const db = require('../db/db');
 const cartQueries = require('../db/cartQueries');
 const orderQueries = require('../db/orderQueries');
-const { validateGuid } = require('./guidRegEx');
+const { validateUuid } = require('./uuidRegEx');
 
 /**
- * checks guid param,sets req.guid if guid param valid, else sets error
- * @param {String} - 'guid'; matches the route handler path variable (:guid)
- * @param {string} - guid - actual value of guid parameter in route path
+ * checks uuid param,sets req.uuid if uuid param valid, else sets error
+ * @param {String} - 'uuid'; matches the route handler path variable (:uuid)
+ * @param {string} - uuid - actual value of uuid parameter in route path
  */
 
-cartsRouter.param('guid', (req, res, next, guid) => {
+cartsRouter.param('uuid', (req, res, next, uuid) => {
   try {
-    if (validateGuid(guid)) {
-      req.guid = guid;
+    if (validateUuid(uuid)) {
+      req.uuid = uuid;
       next();
     } else {
       next(res.status(404).json('Invalid parameter'))
@@ -43,15 +43,34 @@ cartsRouter.get('/', async (req, res) => {
   }
 });
 
-cartsRouter.get('/:guid', async (req, res) => {
+cartsRouter.get('/cart/:uuid', async (req, res) => {
 
-  // GET request - get one cart by guid
-  // path: localhost:5000/carts/guid
-  //  where guid is the guid code for the cart
+  // GET request - get one cart by cart uuid
+  // path: localhost:5000/carts/cart/uuid
+  //  where uuid is the uuid code for the cart
   // body: not used
 
   try {
-    const results = await cartQueries.getCart(req.guid);
+    const results = await cartQueries.getCartByCartUuid(req.uuid);
+    if (results.status === 200) {
+      res.status(200).json(results.cart);
+    } else {
+      res.status(results.status).json(results.message);
+    }
+  } catch (err) {
+    throw Error(err);
+  }
+});
+
+cartsRouter.get('/user/:uuid', async (req, res) => {
+
+  // GET request - get one cart by user uuid
+  // path: localhost:5000/carts/user/uuid
+  //  where uuid is the uuid code for the user
+  // body: not used
+
+  try {
+    const results = await cartQueries.getCartByUserUuid(req.uuid);
     if (results.status === 200) {
       res.status(200).json(results.cart);
     } else {
@@ -73,10 +92,10 @@ cartsRouter.post('/', async (req, res) => {
   //    user_id: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
   //  }
   
-  const { created, user_guid } = req.body;
-  const rowValues = [created, created, user_guid];
+  const { created, user_uuid } = req.body;
+  const rowValues = [created, created, user_uuid];
   const sqlCommand = `
-    INSERT INTO carts (created, modified, user_guid) 
+    INSERT INTO carts (created, modified, user_uuid) 
     VALUES ($1, $2, $3) 
     RETURNING *;`;
   try {
@@ -88,20 +107,22 @@ cartsRouter.post('/', async (req, res) => {
     }    
   } catch (err) {    
     if (err.code === '23505') {
-      res.status(400).json('user_guid already used');
+      res.status(400).json('user_uuid already used');
     } else if (err.code === '23502') {
       res.status(400).json('required value missing');
+    } else if (err.code === '22008' && err.routine && err.routine === 'DateTimeParseError') {
+      res.status(400).json('invalid date format');
     } else {
       throw Error(err);
     }    
   }
 });
 
-cartsRouter.post('/:guid/checkout', async (req, res) => {
+cartsRouter.post('/:uuid/checkout', async (req, res) => {
 
   // POST request
-  // path: localhost:5000/carts/guid/checkout
-  //  where guid is the guid code for the cart
+  // path: localhost:5000/carts/uuid/checkout
+  //  where uuid is the uuid code for the cart
   // body: JSON object
   //  {
   //    id: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
@@ -123,24 +144,24 @@ cartsRouter.post('/:guid/checkout', async (req, res) => {
   }
 });
 
-cartsRouter.put('/:guid', async (req, res) => {
+cartsRouter.put('/:uuid', async (req, res) => {
 
   // PUT request
-  // path: localhost:5000/carts/guid
-  //  where guid is the guid code for the cart
+  // path: localhost:5000/carts/uuid
+  //  where uuid is the uuid code for the cart
   // body: JSON object
   //  {
   //    created: new Date("01/28/2023"), (not required, not used, cannot change created date)
   //    modified: new Date("01/28/2023"),
-  //    user_id: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX (not requires, not used, cannot change user_guid)
+  //    user_id: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX (not required, not used, cannot change user_uuid)
   //  }
     
   const { modified } = req.body;
-  const rowValues = [modified, req.guid];
+  const rowValues = [modified, req.uuid];
   const sqlCommand = `
     UPDATE carts
     SET modified = $1        
-    WHERE guid = $2
+    WHERE uuid = $2
     RETURNING *;`;
   try {
     const results = await db.query(sqlCommand, rowValues);
@@ -151,7 +172,7 @@ cartsRouter.put('/:guid', async (req, res) => {
     };
   } catch (err) {
     if (err.code === '23505') {
-      res.status(400).json('user_guid already used');
+      res.status(400).json('user_uuid already used');
     } else if (err.code === '23502') {
       res.status(400).json('required value missing');
     } else if (err.code === '23503') {
@@ -162,18 +183,18 @@ cartsRouter.put('/:guid', async (req, res) => {
   }
 });
 
-cartsRouter.delete('/:guid', async (req, res) => {
+cartsRouter.delete('/:uuid', async (req, res) => {
 
   // DELETE request
-  // path: localhost:5000/carts/guid
-  //  where guid is the guid code for the cart
+  // path: localhost:5000/carts/uuid
+  //  where uuid is the uuid code for the cart
   // body: not used
   
   try {
-    const results = await cartQueries.deleteCart(req.guid);
+    const results = await cartQueries.deleteCart(req.uuid);
     if (results) {
       if (results.status === 200) {      
-        res.status(200).send(`${req.guid}`);
+        res.status(200).send(`${req.uuid}`);
       } else {
         if (results.status === 404) {
           res.status(404).send(`Cart not found`);
@@ -192,15 +213,15 @@ cartsRouter.delete('/:guid', async (req, res) => {
 });
 
 /**
- * checks itemGuid param,sets req.itemGuid if itemGuid param valid, else sets error
- * @param {String} - 'itemGuid'; matches the route handler path variable (:itemGuid)
- * @param {string} - itemGuid - actual value of id parameter in route path
+ * checks itemUuid param,sets req.itemUuid if itemUuid param valid, else sets error
+ * @param {String} - 'itemUuid'; matches the route handler path variable (:itemUuid)
+ * @param {string} - itemUuid - actual value of id parameter in route path
  */
 
-cartsRouter.param('itemGuid', (req, res, next, itemGuid) => {
+cartsRouter.param('itemUuid', (req, res, next, itemUuid) => {
   try {
-    if (validateGuid(itemGuid)) {
-      req.itemGuid = itemGuid;
+    if (validateUuid(itemUuid)) {
+      req.itemUuid = itemUuid;
       next();
     } else {
       next(res.status(404).json('Invalid parameter'))
@@ -210,15 +231,15 @@ cartsRouter.param('itemGuid', (req, res, next, itemGuid) => {
   }
 });
 
-cartsRouter.get('/:guid/items', async (req, res) => {
+cartsRouter.get('/:uuid/items', async (req, res) => {
 
   // GET request
   // path: localhost:5000/carts/#/items
-  //  where guid is the guid code for the cart
+  //  where uuid is the uuid code for the cart
   // body: not used
 
   try {
-    const results = await cartQueries.getAllItemsForCart(req.guid);
+    const results = await cartQueries.getAllItemsForCart(req.uuid);
     if (results) {
       res.status(200).json(results);
     } else {
@@ -229,16 +250,16 @@ cartsRouter.get('/:guid/items', async (req, res) => {
   }
 });
 
-cartsRouter.get('/items/:itemGuid', async (req, res) => {
+cartsRouter.get('/items/:itemUuid', async (req, res) => {
 
   // GET request
-  // path: localhost:5000/carts/guid/items/itemGuid
-  //  where guid is the guid code for the cart, and itemGuid is the guid code of the cart_item
+  // path: localhost:5000/carts/uuid/items/itemUuid
+  //  where uuid is the uuid code for the cart, and itemUuid is the uuid code of the cart_item
   // body: not used
 
-  const sqlCommand = `SELECT * FROM cart_items WHERE guid = $1;`;
+  const sqlCommand = `SELECT * FROM cart_items WHERE uuid = $1;`;
   try {
-    const results = await db.query(sqlCommand, [req.itemGuid]); 
+    const results = await db.query(sqlCommand, [req.itemUuid]); 
     if (db.validResultsAtLeast1Row(results)) {      
       res.status(200).json(results.rows[0]);
     } else {        
@@ -249,22 +270,21 @@ cartsRouter.get('/items/:itemGuid', async (req, res) => {
   }
 });
 
-cartsRouter.post('/:guid/items', async (req, res) => {
+cartsRouter.post('/:uuid/items', async (req, res) => {
 
   // POST request
   // path: localhost:5000/carts/#/items
-  //  where guid is the guid code for the cart
+  //  where uuid is the uuid code for the cart
   // body: JSON object
   //  {
-  //    cart_guid: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
-  //    product_guid: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
+  //    product_uuid: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
   //    quantity: 2
   //  }
     
-  const { product_guid, quantity } = req.body;
-  const rowValues = [req.guid, product_guid, quantity];
+  const { product_uuid, quantity } = req.body;
+  const rowValues = [req.uuid, product_uuid, quantity];
   const sqlCommand = `
-    INSERT INTO cart_items (cart_guid, product_guid, quantity) 
+    INSERT INTO cart_items (cart_uuid, product_uuid, quantity) 
     VALUES ($1, $2, $3) RETURNING *;`;
   try {
     const results = await db.query(sqlCommand, rowValues);
@@ -284,25 +304,24 @@ cartsRouter.post('/:guid/items', async (req, res) => {
   }
 });
 
-cartsRouter.put('/items/:itemGuid', async (req, res) => {
+cartsRouter.put('/items/:itemUuid', async (req, res) => {
 
   // PUT request
-  // path: localhost:5000/carts/guid/items/itemGuid
-  //  where guid is the guid code for the cart, and itemGuid is the guid code of the cart item
+  // path: localhost:5000/carts/uuid/items/itemUuid
+  //  where uuid is the uuid code for the cart, and itemUuid is the uuid code of the cart item
   // body: JSON object
   //  {
-  //    product_guid: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
   //    quantity: 2
   //  }
+  //  note: no need to change anything but the quantity
   
-  const itemGuid = req.params.itemGuid; 
-  const { product_guid, quantity } = req.body;
-  const rowValues = [product_guid, quantity, itemGuid];
+  const itemUuid = req.params.itemUuid; 
+  const { quantity } = req.body;
+  const rowValues = [ quantity, itemUuid];
   const sqlCommand = `
     UPDATE cart_items
-    SET product_guid = $1, 
-        quantity = $2        
-    WHERE guid = $3
+    SET quantity = $1
+    WHERE uuid = $2
     RETURNING *;`;
   try {
     const results = await db.query(sqlCommand, rowValues);
@@ -322,18 +341,18 @@ cartsRouter.put('/items/:itemGuid', async (req, res) => {
   }
 });
 
-cartsRouter.delete('/items/:itemGuid', async (req, res) => {
+cartsRouter.delete('/items/:itemUuid', async (req, res) => {
 
   // DELETE request
   // path: localhost:5000/carts/#
-  //  where itemGuid is the guid code for the cart item
+  //  where itemUuid is the uuid code for the cart item
   // body: not used
     
-  const sqlCommand = `DELETE FROM cart_items WHERE guid = $1;`;
+  const sqlCommand = `DELETE FROM cart_items WHERE uuid = $1;`;
   try {
-    const results = await db.query(sqlCommand, [req.itemGuid]);
+    const results = await db.query(sqlCommand, [req.itemUuid]);
     if (results.rowCount === 1) {
-      res.status(200).send(`${req.itemGuid}`);
+      res.status(200).send(`${req.itemUuid}`);
     } else {
       res.status(404).send(`Cart item not found`);
     }
@@ -342,21 +361,21 @@ cartsRouter.delete('/items/:itemGuid', async (req, res) => {
   }
 });
 
-cartsRouter.delete('/:guid/allItems', async (req, res) => {
+cartsRouter.delete('/:uuid/allItems', async (req, res) => {
 
   // DELETE request
   // path: localhost:5000/carts/#
-  //  where guid is the guid code for the cart
+  //  where uuid is the uuid code for the cart
   // body: not used
     
   try {    
-    const results = await cartQueries.deleteCartItems(req.guid);
+    const results = await cartQueries.deleteCartItems(req.uuid);
     // deleteCartItems returns # of rows deleted. 
     // 0 rows is valid, so error on null, empty strings, false, undefined
     if (!results && results !== 0) {
       res.status(404).send('Could not delete cart items');
     } else {
-      res.status(200).send(`${req.guid}`);
+      res.status(200).send(`${req.uuid}`);
     }
   } catch (err) {
     throw Error(err);

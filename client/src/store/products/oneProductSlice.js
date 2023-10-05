@@ -5,47 +5,47 @@ import { baseApi } from "../../tools/tools";
 
 const initialState = {
   loading: false,
-  data: [],
+  data: {},
   error: '',
 }
 
-export const fetchProducts = createAsyncThunk('products/fetchProducts', async () => {
+export const fetchOneProduct = createAsyncThunk('product/fetchProduct', async (uuid) => {
   try {
     const response = await axios({
       method: 'get',
       withCredentials: true,
-      url: `${baseApi}/products`,
+      url: `${baseApi}/products/${uuid}`,
     });
     if (response.status === 200 && response.data) {
       return response.data; // response.data is already JSON'ed
     } else {
-      console.log('Products - Non error return, but not status 200');
-      return [];
+      console.log('One Product - Non error return, but not status 200');
+      return {};
     }
   } catch (err) {
-    return [];
+    return {};
   }
 });
 
-export const productsSlice = createSlice({
-  name: 'products',
+export const oneProductSlice = createSlice({
+  name: 'oneProduct',
   initialState: initialState,
   reducers: { },  
   extraReducers: (builder) => {
-    builder.addCase(fetchProducts.pending, (state) => {
+    builder.addCase(fetchOneProduct.pending, (state) => {
       state.loading = true; 
       state.error = '';
     })
-    builder.addCase(fetchProducts.fulfilled, (state, action) => {
+    builder.addCase(fetchOneProduct.fulfilled, (state, action) => {
       state.loading = false;      
       state.data = action.payload;
       state.error = '';
     })
-    builder.addCase(fetchProducts.rejected, (state, action) => {      
+    builder.addCase(fetchOneProduct.rejected, (state, action) => {      
       state.loading = false;
       state.error = action.error.message;
     })
   }
 });
 
-export default productsSlice.reducer;
+export default oneProductSlice.reducer;

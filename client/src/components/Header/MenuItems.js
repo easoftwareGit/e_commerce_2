@@ -1,25 +1,19 @@
-export const homeId = 1;
-export const orderHistoryId = 2;
-export const cartId = 3;
-export const checkoutId = 4;
-export const loginId = 5
+export const homeId = 0;
+export const productsId = 1;
+export const cartId = 2;
+export const checkoutId = 3;
+export const orderHistoryId = 4;
+export const loginId = 5;
 export const registerId = 6;
 export const logoutId = 7;
 
 const MenuItems = [
   {
-    id: homeId,
+    id: productsId,
     active: false,
     visible: true,
     href: "/products",
     linkText: "Products"
-  },
-  {
-    id: orderHistoryId,
-    active: false,
-    visible: true,
-    href: "/orderhistory",
-    linkText: "Order History"
   },
   {
     id: cartId,
@@ -34,6 +28,13 @@ const MenuItems = [
     visible: true,
     href: "/checkout",
     linkText: "Check Out"
+  },
+  {
+    id: orderHistoryId,
+    active: false,
+    visible: true,
+    href: "/orderhistory",
+    linkText: "Order History"
   },
   {
     id: loginId,

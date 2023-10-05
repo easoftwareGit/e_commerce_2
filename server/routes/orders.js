@@ -2,18 +2,18 @@ const express = require('express');
 const ordersRouter = express.Router();
 const db = require('../db/db');
 const orderQueries = require('../db/orderQueries');
-const { validateGuid } = require('./guidRegEx');
+const { validateUuid } = require('./uuidRegEx');
 
 /**
- * checks guid param,sets req.guid if guid param valid, else sets error
- * @param {String} - 'guid'; matches the route handler path variable (:guid)
- * @param {string} - guid - actual value of guid parameter in route path
+ * checks uuid param,sets req.uuid if uuid param valid, else sets error
+ * @param {String} - 'uuid'; matches the route handler path variable (:uuid)
+ * @param {string} - uuid - actual value of uuid parameter in route path
  */
 
-ordersRouter.param('guid', (req, res, next, guid) => {
+ordersRouter.param('uuid', (req, res, next, uuid) => {
   try {
-    if (validateGuid(guid)) {
-      req.guid = guid;
+    if (validateUuid(uuid)) {
+      req.uuid = uuid;
       next();
     } else {
       next(res.status(404).json('Invalid parameter'))
@@ -42,16 +42,16 @@ ordersRouter.get('/', async (req, res) => {
   }
 });
 
-ordersRouter.get('/:guid', async (req, res) => {
+ordersRouter.get('/:uuid', async (req, res) => {
 
-  // GET request - get one order by guid
-  // path: localhost:5000/orders/guid 
-  //  where guid is the guid code for the order
+  // GET request - get one order by uuid
+  // path: localhost:5000/orders/uuid 
+  //  where uuid is the uuid code for the order
   // body: not used
 
-  const sqlCommand = `SELECT * FROM orders WHERE guid = $1`;
+  const sqlCommand = `SELECT * FROM orders WHERE uuid = $1`;
   try {
-    const results = await db.query(sqlCommand, [req.guid]); 
+    const results = await db.query(sqlCommand, [req.uuid]); 
     if (db.validResultsAtLeast1Row(results)) {      
       res.status(200).json(results.rows[0]);
     } else {        
@@ -72,7 +72,7 @@ ordersRouter.post('/', async (req, res) => {
   //    modified: new Date("01/28/2023"), (not required, will be set = created)
   //    status: 'Created',                (not required will be set = 'Created')
   //    total_price: 123.45,
-  //    user_guid: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
+  //    user_uuid: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
   //  }
   //  note: 
   //    on a post, modified = created
@@ -96,29 +96,29 @@ ordersRouter.post('/', async (req, res) => {
   }
 });
 
-ordersRouter.put('/:guid', async (req, res) => {
+ordersRouter.put('/:uuid', async (req, res) => {
 
   // PUT request
   // path: localhost:5000/orders/#
-  //  where guid is the guid code for the order
+  //  where uuid is the uuid code for the order
   // body: JSON object
   //  {  
   //    modified: new Date("01/28/2023"), 
   //    status: 'Updated',
   //    total_price: 123.45,
-  //    user_guid: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
+  //    user_uuid: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
   //  }
   //  note: created column NEVER updated in PUT route
     
-  const { modified, status, total_price, user_guid } = req.body;
-  const rowValues = [modified, status, total_price, user_guid, req.guid];
+  const { modified, status, total_price, user_uuid } = req.body;
+  const rowValues = [modified, status, total_price, user_uuid, req.uuid];
   const sqlCommand = `
     UPDATE orders
     SET modified = $1, 
         status = $2,
         total_price = $3,
-        user_guid = $4
-    WHERE guid = $5
+        user_uuid = $4
+    WHERE uuid = $5
     RETURNING *`;
   try {
     const results = await db.query(sqlCommand, rowValues);
@@ -138,18 +138,18 @@ ordersRouter.put('/:guid', async (req, res) => {
   }
 });
 
-ordersRouter.delete('/:guid', async (req, res) => {
+ordersRouter.delete('/:uuid', async (req, res) => {
 
   // DELETE request
-  // path: localhost:5000/orders/guid
-  //  where guid is the guid code for the order
+  // path: localhost:5000/orders/uuid
+  //  where uuid is the uuid code for the order
   // body: not used
   
-  const sqlCommand = `DELETE FROM orders WHERE guid = $1`;
+  const sqlCommand = `DELETE FROM orders WHERE uuid = $1`;
   try {
-    const results = await db.query(sqlCommand, [req.guid]);
+    const results = await db.query(sqlCommand, [req.uuid]);
     if (results.rowCount === 1) {
-      res.status(200).send(`${req.guid}`);
+      res.status(200).send(`${req.uuid}`);
     } else {
       res.status(404).send(`Order not found`);
     }
@@ -163,15 +163,15 @@ ordersRouter.delete('/:guid', async (req, res) => {
 });
 
 /**
- * checks itemGuid param,sets req.itemGuid if itemGuid param valid, else sets error
- * @param {String} - 'itemGuid'; matches the route handler path variable (:itemGuid)
- * @param {string} - itemGuid - actual value of id parameter in route path
+ * checks itemUuid param,sets req.itemUuid if itemUuid param valid, else sets error
+ * @param {String} - 'itemUuid'; matches the route handler path variable (:itemUuid)
+ * @param {string} - itemUuid - actual value of id parameter in route path
  */
 
-ordersRouter.param('itemGuid', (req, res, next, itemGuid) => {
+ordersRouter.param('itemUuid', (req, res, next, itemUuid) => {
   try {
-    if (validateGuid(itemGuid)) {
-      req.itemGuid = itemGuid;
+    if (validateUuid(itemUuid)) {
+      req.itemUuid = itemUuid;
       next();
     } else {
       next(res.status(404).json('Invalid parameter'))
@@ -181,22 +181,22 @@ ordersRouter.param('itemGuid', (req, res, next, itemGuid) => {
   }
 });
 
-ordersRouter.get('/:guid/items', async (req, res) => {
+ordersRouter.get('/:uuid/items', async (req, res) => {
 
   // GET request
   // path: localhost:5000/orders/#/items
-  //  where guid is the guid code for the order
+  //  where uuid is the uuid code for the order
   // body: not used
 
   const sqlCommand = `
-    SELECT order_items.guid, order_guid, product_guid, quantity, price_unit,
+    SELECT order_items.uuid, order_uuid, product_uuid, quantity, price_unit,
            products.name, products.category, products.description, 
            products.designer, (price_unit * quantity) AS item_total
     FROM order_items
-    INNER JOIN products ON (products.guid = order_items.product_guid)
-    WHERE order_guid = $1;`;
+    INNER JOIN products ON (products.uuid = order_items.product_uuid)
+    WHERE order_uuid = $1;`;
   try {
-    const results = await db.query(sqlCommand, [req.guid]); 
+    const results = await db.query(sqlCommand, [req.uuid]); 
     if (db.validResultsAtLeast1Row(results)) {      
       res.status(200).json(results.rows);
     } else {        
@@ -207,16 +207,16 @@ ordersRouter.get('/:guid/items', async (req, res) => {
   }
 });
 
-ordersRouter.get('/items/:itemGuid', async (req, res) => {
+ordersRouter.get('/items/:itemUuid', async (req, res) => {
 
   // GET request
-  // path: localhost:5000/orders/guid/items/itemGuid
-  //  where guid is the guid code for the order, and itemGuid is the guid code of the order item
+  // path: localhost:5000/orders/uuid/items/itemUuid
+  //  where uuid is the uuid code for the order, and itemUuid is the uuid code of the order item
   // body: not used
 
-  const sqlCommand = `SELECT * FROM order_items WHERE guid = $1`;
+  const sqlCommand = `SELECT * FROM order_items WHERE uuid = $1`;
   try {
-    const results = await db.query(sqlCommand, [req.itemGuid]); 
+    const results = await db.query(sqlCommand, [req.itemUuid]); 
     if (db.validResultsAtLeast1Row(results)) {      
       res.status(200).json(results.rows[0]);
     } else {        
@@ -227,20 +227,20 @@ ordersRouter.get('/items/:itemGuid', async (req, res) => {
   }
 });
 
-ordersRouter.post('/:guid/items', async (req, res) => {
+ordersRouter.post('/:uuid/items', async (req, res) => {
 
   // POST request
   // path: localhost:5000/orders/#/items
-  //  where guid is the guid code for the order
+  //  where uuid is the uuid code for the order
   // body: JSON object
   //  {
-  //    product_guid: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
+  //    product_uuid: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
   //    quantity: 2
   //    price_unit: 12.34
   //  }
       
   const orderItem = req.body;
-  orderItem.order_guid = req.guid;
+  orderItem.order_uuid = req.uuid;
   try {
     const results = await orderQueries.createOrderItem(orderItem);
     if (results.status === 201) {
@@ -253,27 +253,27 @@ ordersRouter.post('/:guid/items', async (req, res) => {
   }  
 });
 
-ordersRouter.put('/items/:itemGuid', async (req, res) => {
+ordersRouter.put('/items/:itemUuid', async (req, res) => {
 
   // PUT request
-  // path: localhost:5000/orders/guid/items/itemGuid
-  //  where guid is the guid code for the order, and itemGuid is the guid code of the order item
+  // path: localhost:5000/orders/uuid/items/itemUuid
+  //  where uuid is the uuid code for the order, and itemUuid is the uuid code of the order item
   // body: JSON object
   //  {
-  //    product_guid: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
+  //    product_uuid: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
   //    quantity: 2
   //    price_unit: 12.34
   //  }
   
-  const itemGuid = req.params.itemGuid; 
-  const { product_guid, quantity, price_unit } = req.body;
-  const rowValues = [product_guid, quantity, price_unit, itemGuid];
+  const itemUuid = req.params.itemUuid; 
+  const { product_uuid, quantity, price_unit } = req.body;
+  const rowValues = [product_uuid, quantity, price_unit, itemUuid];
   const sqlCommand = `
     UPDATE order_items
-    SET product_guid = $1, 
+    SET product_uuid = $1, 
         quantity = $2,
         price_unit = $3
-    WHERE guid = $4
+    WHERE uuid = $4
     RETURNING *`;
   try {
     const results = await db.query(sqlCommand, rowValues);
@@ -293,18 +293,18 @@ ordersRouter.put('/items/:itemGuid', async (req, res) => {
   }
 });
 
-ordersRouter.delete('/items/:itemGuid', async (req, res) => {
+ordersRouter.delete('/items/:itemUuid', async (req, res) => {
 
   // DELETE request
-  // path: localhost:5000/orders/guid
-  //  where itemGuid is the guid code for the order item
+  // path: localhost:5000/orders/uuid
+  //  where itemUuid is the uuid code for the order item
   // body: not used
     
-  const sqlCommand = `DELETE FROM order_items WHERE guid = $1`;
+  const sqlCommand = `DELETE FROM order_items WHERE uuid = $1`;
   try {
-    const results = await db.query(sqlCommand, [req.itemGuid]);
+    const results = await db.query(sqlCommand, [req.itemUuid]);
     if (results.rowCount === 1) {
-      res.status(200).send(`${req.itemGuid}`);
+      res.status(200).send(`${req.itemUuid}`);
     } else {
       res.status(404).send(`Order item not found`);
     }
@@ -317,18 +317,18 @@ ordersRouter.delete('/items/:itemGuid', async (req, res) => {
   }
 });
 
-ordersRouter.delete('/:guid/allItems', async (req, res) => {
+ordersRouter.delete('/:uuid/allItems', async (req, res) => {
 
   // DELETE request
-  // path: localhost:5000/orders/guid
-  //  where guid is the guid for the order
+  // path: localhost:5000/orders/uuid
+  //  where uuid is the uuid for the order
   // body: not used
     
-  const sqlCommand = `DELETE FROM order_items WHERE order_guid = $1`;
+  const sqlCommand = `DELETE FROM order_items WHERE order_uuid = $1`;
   try {
-    const results = await db.query(sqlCommand, [req.guid]);
+    const results = await db.query(sqlCommand, [req.uuid]);
     if (results.rowCount > 0) {
-      res.status(200).send(`${req.guid}`);
+      res.status(200).send(`${req.uuid}`);
     } else {
       res.status(404).send(`Order items not found`);
     }

@@ -13,10 +13,10 @@ const cartQueries = require('./cartQueries');
  *    err: { status:404, message: error message }
  */
 async function createNewOrder(order) {
-  const { created, total_price, user_guid } = order;
-  const rowValues = [created, created, 'Created', total_price, user_guid];
+  const { created, total_price, user_uuid } = order;
+  const rowValues = [created, created, 'Created', total_price, user_uuid];
   const sqlCommand = `
-    INSERT INTO orders(created, modified, status, total_price, user_guid) 
+    INSERT INTO orders(created, modified, status, total_price, user_uuid) 
     VALUES ($1, $2, $3, $4, $5) 
     RETURNING *`;
   try {
@@ -53,10 +53,10 @@ async function createNewOrder(order) {
  *    err: { status:404, message: error message }
  */
 async function createOrderItem(orderItem) {
-  const { order_guid, product_guid, quantity, price_unit } = orderItem;
-  const rowValues = [order_guid, product_guid, quantity, price_unit];
+  const { order_uuid, product_uuid, quantity, price_unit } = orderItem;
+  const rowValues = [order_uuid, product_uuid, quantity, price_unit];
   const sqlCommand = `
-    INSERT INTO order_items (order_guid, product_guid, quantity, price_unit) 
+    INSERT INTO order_items (order_uuid, product_uuid, quantity, price_unit) 
     VALUES ($1, $2, $3, $4) RETURNING *`;
   try {
     const results = await db.query(sqlCommand, rowValues);
@@ -91,16 +91,16 @@ async function createOrderItem(orderItem) {
 /**
  * creates order items from a cart
  *
- * @param {String} orderGuid - order guid to link new order items
+ * @param {String} orderUuid - order uuid to link new order items
  * @param {Array} cartItems - array of cart item onjects
  * @returns {Array|null} Array = objects of order data from cart; null = no cart items
  */
-async function createOrderItems(orderGuid, cartItems) {
+async function createOrderItems(orderUuid, cartItems) {
 
   try {
     const orderItems = [];
     await Promise.all(cartItems.map(async (item) => {
-      item.order_guid = orderGuid;
+      item.order_uuid = orderUuid;
       const results = await createOrderItem(item);
       if (results.status === 201) {
         orderItems.push(results.orderItem);
@@ -130,7 +130,7 @@ async function insertOrderFromCart(cart, total_price) {
     created: created,
     modified: created,
     total_price: total_price,
-    user_guid: cart.user_guid,
+    user_uuid: cart.user_uuid,
   }
   const results = await createNewOrder(newOrder);
   if (results.status === 201) {
@@ -143,18 +143,18 @@ async function insertOrderFromCart(cart, total_price) {
 /**
  * inserts cart items into an order's items
  *
- * @param {String} orderGuid - order guid to link new order items
- * @param {String} cartGuid - cart guid with cart items to move to order
+ * @param {String} orderUuid - order uuid to link new order items
+ * @param {String} cartUuid - cart uuid with cart items to move to order
  * @return {Integer|null} Integer = # of rows inserted; null = error inserting
  */
-async function insertOrdersItemsFromCartItems(orderGuid, cartGuid) {
+async function insertOrdersItemsFromCartItems(orderUuid, cartUuid) {
   const sqlcommand = `
-    INSERT INTO order_items (order_guid, product_guid, quantity, price_unit)
-    SELECT $1, cart_items.product_guid, cart_items.quantity, products.price
+    INSERT INTO order_items (order_uuid, product_uuid, quantity, price_unit)
+    SELECT $1, cart_items.product_uuid, cart_items.quantity, products.price
     FROM cart_items
-    INNER JOIN products ON (products.guid = cart_items.product_guid)
-    WHERE cart_items.cart_guid = $2`;
-  const queryValues = [orderGuid, cartGuid];
+    INNER JOIN products ON (products.uuid = cart_items.product_uuid)
+    WHERE cart_items.cart_uuid = $2`;
+  const queryValues = [orderUuid, cartUuid];
   try {
     const results = await db.query(sqlcommand, queryValues);
     if (results  && results.rowCount) {
@@ -184,20 +184,20 @@ async function insertOrdersItemsFromCartItems(orderGuid, cartGuid) {
 async function moveCartToOrder(cart) {
 
   try {
-    const totalPrice = await cartQueries.getCartTotalPrice(cart.guid);
+    const totalPrice = await cartQueries.getCartTotalPrice(cart.uuid);
     if (totalPrice) {
       // create new order from cart
       const newOrder = await insertOrderFromCart(cart, totalPrice)
       if (newOrder) {
-        const newOrderGuid = newOrder.guid;
+        const newOrderUuid = newOrder.uuid;
         // move cart items into order items linking to new order
-        let insertedItemCount = await insertOrdersItemsFromCartItems(newOrderGuid, cart.guid);
+        let insertedItemCount = await insertOrdersItemsFromCartItems(newOrderUuid, cart.uuid);
         if (insertOrderFromCart) {
           // delete cart items
-          const movedItemCount = await cartQueries.deleteCartItems(cart.guid);
+          const movedItemCount = await cartQueries.deleteCartItems(cart.uuid);
           if (movedItemCount === insertedItemCount) {
             // delete cart
-            const deleteResults = await cartQueries.deleteCart(cart.guid);
+            const deleteResults = await cartQueries.deleteCart(cart.uuid);
             if (deleteResults.rowCount === 1) {
               return {
                 status: 201,

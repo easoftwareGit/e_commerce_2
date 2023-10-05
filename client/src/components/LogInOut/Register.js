@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { homeId } from './MenuItems';
+import { homeId } from '../Header/MenuItems';
 import { Modal } from 'bootstrap';
-import ModalMsg from './ModalMsg';
+import ModalMsg from '../ModalMsg';
+import { baseApi } from '../../tools/tools';
 
 const string = require("string-sanitizer");
 const { phone } = require('phone');
 
 const Register = props => {
 
-  const { baseApi, setActiveMenuItem} = props;
+  const { setActiveMenuItem } = props;
   
   const navigate = useNavigate()
 
@@ -206,8 +207,7 @@ const Register = props => {
     }
   }  
 
-  const showModal = (title, message) => {
-    
+  const showModal = (title, message) => {    
     setModalInfo({
       title: title,
       message: message
