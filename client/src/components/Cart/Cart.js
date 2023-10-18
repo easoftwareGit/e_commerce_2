@@ -3,14 +3,14 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { Modal } from 'bootstrap';
 import ModalMsg from '../ModalMsg';
-import { cartId } from '../Header/MenuItems';
-// import { baseApi } from '../../tools/tools';
-import { formatter, asMoney } from '../../tools/tools';
+import { formatter, asMoney, imageBaseUrl, minDollors } from '../../tools/tools';
 import QtySelect from './qtySelect';
 
 import { fetchUserCart, modifiedCart } from '../../store/cart/cartSlice';
 import { fetchCartItems, deleteCartItem, updateCartItem } from '../../store/cart/cartItemsSlice';
 import { cartTotalActions } from '../../store/cart/cartTotalSlice';
+
+import './cart.css';
 
 const Cart = props => {
 
@@ -28,7 +28,9 @@ const Cart = props => {
 
   const cart = useSelector((state) => state.cart);
   useEffect(() => {
-    dispatch(fetchUserCart(user.data.uuid))
+    if (user.data.uuid) {
+      dispatch(fetchUserCart(user.data.uuid))
+    }
   }, [])
   
   const cartItems = useSelector((state) => state.cartItems);
@@ -91,8 +93,14 @@ const Cart = props => {
     myModal.show();
   }
 
-  const checkout = () => {    
-    navigate('/checkout')
+  const checkout = () => {
+    if (cartItems.data.length < 1) {
+      showModal('Cannot checkout', "There are no items in your cart.")
+    } else if (cartTotal < minDollors) {
+      showModal('Cannot checkout', `Minimum amount is ${formatter.format(minDollors)}.`)
+    } else {
+      navigate('/payment')
+    }
   }
 
   const showModal = (title, message, confirm=false) => {    
@@ -126,11 +134,6 @@ const Cart = props => {
         {cart.loading && <div>Loading...</div>}
         {!cart.loading && cart.error ? <div>Error: {cart.error}</div> : null}
         {!cartItems.loading && cartItems.error ? <div>Error: {cartItems.error}</div> : null}
-        {/* {(!cart.loading && cart.data && user && user.data) ? <div>Cart for {user.data.first_name}, uuid: {cart.data.uuid}</div> : null}
-        {(!cart.loading && cart.data && cartItems && cartItems.data) ? <div># Items for cart: {cartItems.data.length}</div> : null}
-        {(!cart.loading && cart.data && !cartItems) ? <div>No Items for cart</div> : null}
-        {(!cart.loading && cart.data && (!cartTotal || cartTotal.data === 0)) ? <div>No Total for cart</div> : null}
-        {(!cart.loading && cart.data && cartTotal && cartTotal.data) ? <div>Total for cart: {cartTotal.data}</div> : null} */}
 
         {(!cart.loading && cart.data && !cartItems.loading && cartItems.data && cartTotal && cartTotal.data) ? (
           <div className="container">
@@ -143,10 +146,11 @@ const Cart = props => {
                 Check Out
               </button>
             </div>
-            <table className='table table-hover'>
+            <table className='table table-hover table-responsive-sm'>
               <thead>
                 <tr>
-                  <th scope='col' className='w-50'>Item</th>
+                  <th scope='col' className='w-25'>Item</th>
+                  <th scope='col' className='w-25'></th>
                   <th scope='col' className='w-15 text-end'>Price</th>
                   <th scope='col' className='w-10 text-center'>Quantity</th>
                   <th scope='col' className='w-10 text-end'>Total</th>
@@ -157,8 +161,16 @@ const Cart = props => {
                 {cartItems.data.map(item => (
                   <tr key={item.uuid}>
                     <td className='align-middle'>{item.name}</td>
+                    {/* <td></td> */}
+                    <td className='align-middle'>
+                      <img
+                        src={`${imageBaseUrl}${item.product_uuid}.png`}
+                        alt={item.name}
+                        className='cartImage'
+                      />
+                    </td>
                     <td className='text-end align-middle'>{formatter.format(item.price)}</td> 
-                    <td className='d-flex justify-content-center'>
+                    <td className='d-flex justify-content-center align-middle'>
                       <QtySelect
                         name={item.uuid}
                         quantity={item.quantity}
@@ -166,7 +178,7 @@ const Cart = props => {
                       />
                     </td>
                     <td className='text-end align-middle'>{formatter.format(item.item_total)}</td>
-                    <td className='text-center'>
+                    <td className='text-center align-middle'>
                       <button
                         type="button"
                         className='btn btn-danger'
@@ -180,9 +192,7 @@ const Cart = props => {
               </tbody>
               <tfoot>
                 <tr>
-                  <th scope='row'>Total</th>
-                  <td></td>                  
-                  <td></td>
+                  <th scope='row' colSpan={4}>Total</th>
                   <td className='text-end'>{formatter.format(cartTotal.data)}</td>
                   <td></td>
                 </tr>

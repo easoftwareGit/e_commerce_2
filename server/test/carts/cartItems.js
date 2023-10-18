@@ -235,11 +235,10 @@ function testCartItems(app) {
       });
     });
 
-    describe(`POST ${baseUrl}/:uuid/items`, function() {
-      const postProductUuid = '56d916ec-e6b5-0e62-9330-0248c6792316'; // uuid of product #2
+    describe(`POST ${baseUrl}/:uuid/items`, function() {      
       const postQuantity = 5
       const newItem = {            
-        product_uuid: postProductUuid,
+        product_uuid: product2Uuid,
         quantity: postQuantity 
       };
       const invalidItem = {                    
@@ -249,7 +248,7 @@ function testCartItems(app) {
 
       const resetSqlCommand = `
         DELETE FROM cart_items
-        WHERE product_uuid = '${postProductUuid}';`
+        WHERE product_uuid = '${product2Uuid}';`
 
       before('before first POST test', async function() {
         await db.query(resetSqlCommand);
@@ -293,7 +292,7 @@ function testCartItems(app) {
       });
 
       it('did NOT post cart item with no quantity', async function() {      
-        invalidItem.product_uuid = postProductUuid;
+        invalidItem.product_uuid = product2Uuid;
         invalidItem.quantity = null;
         return await request(app)
           .post(`${baseUrl}/${cart1Uuid}/items`)

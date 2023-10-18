@@ -45,7 +45,7 @@ ordersRouter.get('/', async (req, res) => {
 ordersRouter.get('/:uuid', async (req, res) => {
 
   // GET request - get one order by uuid
-  // path: localhost:5000/orders/uuid 
+  // path: localhost:5000/api/orders/uuid 
   //  where uuid is the uuid code for the order
   // body: not used
 
@@ -56,6 +56,26 @@ ordersRouter.get('/:uuid', async (req, res) => {
       res.status(200).json(results.rows[0]);
     } else {        
       res.status(404).json('Order not found');
+    }    
+  } catch (err) {
+    throw Error(err);
+  }
+});
+
+ordersRouter.get('/user/:uuid', async (req, res) => {
+
+  // GET request - get orders by user uuid
+  // path: localhost:5000/api/orders/user/uuid 
+  //  where uuid is the uuid code for the user
+  // body: not used
+
+  const sqlCommand = `SELECT * FROM orders WHERE user_uuid = $1`;
+  try {
+    const results = await db.query(sqlCommand, [req.uuid]); 
+    if (db.validResultsAtLeast1Row(results) || results.rows.length === 0) {  
+      res.status(200).json(results.rows);
+    } else {        
+      res.status(404).json('Orders not found');
     }    
   } catch (err) {
     throw Error(err);
@@ -99,7 +119,7 @@ ordersRouter.post('/', async (req, res) => {
 ordersRouter.put('/:uuid', async (req, res) => {
 
   // PUT request
-  // path: localhost:5000/orders/#
+  // path: localhost:5000/api/orders/#
   //  where uuid is the uuid code for the order
   // body: JSON object
   //  {  
@@ -141,7 +161,7 @@ ordersRouter.put('/:uuid', async (req, res) => {
 ordersRouter.delete('/:uuid', async (req, res) => {
 
   // DELETE request
-  // path: localhost:5000/orders/uuid
+  // path: localhost:5000/api/orders/uuid
   //  where uuid is the uuid code for the order
   // body: not used
   
@@ -184,7 +204,7 @@ ordersRouter.param('itemUuid', (req, res, next, itemUuid) => {
 ordersRouter.get('/:uuid/items', async (req, res) => {
 
   // GET request
-  // path: localhost:5000/orders/#/items
+  // path: localhost:5000/api/orders/#/items
   //  where uuid is the uuid code for the order
   // body: not used
 
@@ -210,7 +230,7 @@ ordersRouter.get('/:uuid/items', async (req, res) => {
 ordersRouter.get('/items/:itemUuid', async (req, res) => {
 
   // GET request
-  // path: localhost:5000/orders/uuid/items/itemUuid
+  // path: localhost:5000/api/orders/uuid/items/itemUuid
   //  where uuid is the uuid code for the order, and itemUuid is the uuid code of the order item
   // body: not used
 
@@ -230,7 +250,7 @@ ordersRouter.get('/items/:itemUuid', async (req, res) => {
 ordersRouter.post('/:uuid/items', async (req, res) => {
 
   // POST request
-  // path: localhost:5000/orders/#/items
+  // path: localhost:5000/api/orders/#/items
   //  where uuid is the uuid code for the order
   // body: JSON object
   //  {
@@ -256,7 +276,7 @@ ordersRouter.post('/:uuid/items', async (req, res) => {
 ordersRouter.put('/items/:itemUuid', async (req, res) => {
 
   // PUT request
-  // path: localhost:5000/orders/uuid/items/itemUuid
+  // path: localhost:5000/api/orders/uuid/items/itemUuid
   //  where uuid is the uuid code for the order, and itemUuid is the uuid code of the order item
   // body: JSON object
   //  {
@@ -296,7 +316,7 @@ ordersRouter.put('/items/:itemUuid', async (req, res) => {
 ordersRouter.delete('/items/:itemUuid', async (req, res) => {
 
   // DELETE request
-  // path: localhost:5000/orders/uuid
+  // path: localhost:5000/api/orders/uuid
   //  where itemUuid is the uuid code for the order item
   // body: not used
     
@@ -320,7 +340,7 @@ ordersRouter.delete('/items/:itemUuid', async (req, res) => {
 ordersRouter.delete('/:uuid/allItems', async (req, res) => {
 
   // DELETE request
-  // path: localhost:5000/orders/uuid
+  // path: localhost:5000/api/orders/uuid/allItems
   //  where uuid is the uuid for the order
   // body: not used
     

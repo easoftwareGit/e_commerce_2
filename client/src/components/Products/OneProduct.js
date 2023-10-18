@@ -198,7 +198,7 @@ const OneProduct = props => {
     // get current logged in user
     const user = await getUserFromServer()
     if (!user) {
-      showModal("NOt logged in", "Please log in before ordering");
+      showModal("Not logged in", "Please log in before ordering");
       return null;
     } else {
       // find cart for user
@@ -224,10 +224,6 @@ const OneProduct = props => {
         }
       }
     }
-  }
-
-  const showAlert = (name) => {
-    alert(`Item Name: ${name}`);
   }
 
   const showModal = (title, message) => {    

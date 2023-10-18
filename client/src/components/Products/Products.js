@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Link } from "react-router-dom";
 // import { Modal } from 'bootstrap';
 // import ModalMsg from '../ModalMsg';
-import { formatter, clientBaseUrl, imageBaseUrl } from "../../tools/tools";
+import { formatter, imageBaseUrl } from "../../tools/tools";
 import { productsId } from "../Header/MenuItems";
 
 import { fetchProducts } from "../../store/products/productsSlice";
@@ -42,7 +42,7 @@ const Products = props => {
         message={modalInfo.message}
       /> */}
 
-      <p className="h2 m-2">Products</p>      
+      <p className="h2 m-2">Products</p> 
 
       {products.loading && <div>Loading...</div>}
       {!products.loading && products.error ? <div>Error: {products.error}</div> : null}      

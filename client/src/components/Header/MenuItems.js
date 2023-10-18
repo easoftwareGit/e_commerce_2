@@ -1,11 +1,10 @@
 export const homeId = 0;
 export const productsId = 1;
 export const cartId = 2;
-export const checkoutId = 3;
-export const orderHistoryId = 4;
-export const loginId = 5;
-export const registerId = 6;
-export const logoutId = 7;
+export const orderHistoryId = 3;
+export const loginId = 4;
+export const registerId = 5;
+export const logoutId = 6;
 
 const MenuItems = [
   {
@@ -21,13 +20,6 @@ const MenuItems = [
     visible: true,
     href: "/cart",
     linkText: "Cart"
-  },
-  {
-    id: checkoutId,
-    active: false,
-    visible: true,
-    href: "/checkout",
-    linkText: "Check Out"
   },
   {
     id: orderHistoryId,

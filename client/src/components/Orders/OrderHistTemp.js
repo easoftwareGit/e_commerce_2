@@ -1,24 +1,26 @@
-import React, { useState } from 'react';
-import { formatter, asMoney } from '../tools/tools';
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { formatter, asMoney } from '../../tools/tools';
+import { fetchUserOrders } from '../../store/orders/ordersSlice';
 
-const CheckOut = () => {
+const OrderHistory = () => {
 
   const orderData = [
     {
       id: 1,
-      modified: new Date("02/22/2323"),
+      modified: new Date("02/22/2023"),
       status: 'Shipped',
       total_price: asMoney(81.46)
     },
     {
       id: 2,
-      modified: new Date("03/33/2323"),
+      modified: new Date("03/13/2023"),
       status: 'Shipped',
       total_price: asMoney(577.69)
     },
     {
       id: 3,
-      modified: new Date("10/01/2323"),
+      modified: new Date("10/01/2023"),
       status: 'Pending',
       total_price: asMoney(1249.50)
     },
@@ -27,7 +29,7 @@ const CheckOut = () => {
   const itemsData = [
     {
       id: 1,
-      orderid: 1,
+      orderId: 1,
       item: 'STIG',
       price: asMoney(12.34),
       quantity: 1,
@@ -35,7 +37,7 @@ const CheckOut = () => {
     },
     {
       id: 2,
-      orderid: 1,
+      orderId: 1,
       item: 'BRIMNES',
       price: asMoney(34.56),
       quantity: 2,
@@ -43,7 +45,7 @@ const CheckOut = () => {
     },
     {
       id: 3,
-      orderid: 2,
+      orderId: 2,
       item: 'EKET',
       price: asMoney(56.78),
       quantity: 4,
@@ -51,7 +53,7 @@ const CheckOut = () => {
     },
     {
       id: 4,
-      orderid: 2,
+      orderId: 2,
       item: 'IVAR',
       price: asMoney(123.45),
       quantity: 1,
@@ -59,7 +61,7 @@ const CheckOut = () => {
     },
     {
       id: 5,
-      orderid: 3,
+      orderId: 3,
       item: 'INGOLF',
       price: asMoney(99.95),
       quantity: 6,
@@ -67,7 +69,7 @@ const CheckOut = () => {
     },
     {
       id: 6,
-      orderid: 3,
+      orderId: 3,
       item: 'FRANKLIN',
       price: asMoney(49.95),
       quantity: 3,
@@ -75,7 +77,7 @@ const CheckOut = () => {
     },
     {
       id: 7,
-      orderid: 3,
+      orderId: 3,
       item: 'FLINTAN',
       price: asMoney(499.95),
       quantity: 1,
@@ -83,38 +85,53 @@ const CheckOut = () => {
     },
   ]
 
-  const showPluses = [];
+  const dispatch = useDispatch();
+  const user = useSelector((state) => state.user);
+  const orders = useSelector((state) => state.orders);
+  useEffect(() => {
+    if (user.data.uuid) {
+      dispatch(fetchUserOrders(user.data.uuid))
+    }
+  }, [])
+
+  const initPluses = [];
   orderData.forEach(order => {
-    showPluses.push({
+    initPluses.push({
       id: order.id,
       showPlus: true
     });
   });
-  const [showChildren, setShowChildren] = useState([showPluses])
+  const [showChildren, setShowChildren] = useState(initPluses)
 
-  const plusButtonClassText = (id) => {
-    const showPlusObj = showPluses.filter(item => item.id === id);
-    const plusClassTest = 'btn btn-success'
-    if (showPlusObj.showPlus) {
-      return `${plusClassTest} visible`
+  const childButtonClass = (orderId) => {
+    const showChild = showChildren.find((child) => child.id === orderId);
+    if (showChild) {
+      if (showChild.showPlus) {
+        return 'btn btn-success'
+      } else {
+        return 'btn btn-danger'
+      }    
     } else {
-      return `${plusClassTest} invisible`
+      return '';
     }
   }
 
-  const minusButtonClassText = (id) => {
-    const showPlusObj = showPluses.filter(item => item.id === id);
-    const minusClassTest = 'btn btn-danger'
-    if (showPlusObj.showPlus) {
-      return `${minusClassTest} invisible`
+  const childButtonText = (orderId) => {
+    const showChild = showChildren.find((child) => child.id === orderId);
+    if (showChild) {
+      if (showChild.showPlus) {
+        return '+'
+      } else {
+        return '-'
+      }    
     } else {
-      return `${minusClassTest} visible`
+      return '';
     }
   }
 
-  const handleClick = (id) => {
+  const handleClick = (orderId) => {
     setShowChildren(showChildren.map(child => {
-      if (child.id === id) {
+      if (child.id === orderId) {
         return {
           ...child,
           showPlus: !child.showPlus
@@ -139,28 +156,45 @@ const CheckOut = () => {
           </tr>          
         </thead>
         <tbody>
-          {orderData.map(order => (
-            <tr key={order.id}>
-              <td className='text-center'>
-                <button
-                  type='button'                  
-                  className={plusButtonClassText(order.id)}
-                  onClick={() => handleClick(order.id)}
-                >
-                  +
-                </button>
-                <button
-                  type='button'                  
-                  className={minusButtonClassText(order.id)}
-                  onClick={() => handleClick(order.id)}
-                >
-                  -
-                </button>
-              </td>
-              <td className='align-middle'>{order.modified.toLocaleDateString()}</td>
-              <td className='align-middle'>{order.status}</td>
-              <td className='text-end align-middle'>{formatter.format(order.total_price)}</td>              
-            </tr>
+          {orderData.map(order => (  
+            <>
+              <tr key={order.id}>
+                <td className='text-center'>                
+                  <button
+                    type='button'                  
+                    className={childButtonClass(order.id)}
+                    onClick={() => handleClick(order.id)}
+                  >
+                    {childButtonText(order.id)}
+                  </button>
+                </td>
+                <td className='align-middle'>{order.modified.toLocaleDateString()}</td>
+                <td className='align-middle'>{order.status}</td>
+                <td className='text-end align-middle'>{formatter.format(order.total_price)}</td>              
+              </tr>            
+              <tr>
+                <td colSpan={4}>
+                  <table className='table table-hover'>
+                    <thead>
+                      <tr>
+                        <th scope='col' className='w-25'>Item</th>
+                        <th scope='col' className='w-25 text-end'>Price</th>
+                        <th scope='col' className='w-25 text-center'>Quantity</th>
+                        <th scope='col' className='w-25 text-end'>Total</th>                        
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {itemsData.map(item => (
+                        { }
+                        // {item.orderId === order.id ? (
+                        //   <tr></tr>
+                        // ) : null}
+                      ))}
+                    </tbody>
+                  </table>
+                </td>
+              </tr>
+            </>
           ))}
         </tbody>
       </table>
@@ -184,10 +218,13 @@ const CheckOut = () => {
             </div>
           </div>
         </div>
-      </div>       */}
+      </div>       
+
+
+      */}
 
     </div>
   );
 };
 
-export default CheckOut;
+export default OrderHistory;

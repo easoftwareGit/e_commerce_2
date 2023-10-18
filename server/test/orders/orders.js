@@ -95,8 +95,8 @@ function testOrders(app) {
 
       before('insert test order', async function() {
         const order = {
-          created: new Date("03/03/2323"),
-          modified: new Date("03/03/2323"),    
+          created: new Date(Date.now() - (6 * 24 * 60 * 60 * 1000)), 
+          modified:new Date(Date.now() - (6 * 24 * 60 * 60 * 1000)),    
           status: 'Created',
           total_price: 13.98,
           user_uuid: testUserUuid
@@ -216,7 +216,7 @@ function testOrders(app) {
 
     describe(`POST ${baseUrl}`, function() {
       const newOrder = {
-        created: new Date("06/16/2023"),         
+        created: new Date(Date.now() - (5 * 24 * 60 * 60 * 1000)),       
         total_price: 123.45,
         user_uuid: user1Uuid
       };
@@ -261,7 +261,7 @@ function testOrders(app) {
       });
 
       it('did NOT post order with no total_price', async function() {
-        invalidOrder.created = new Date("06/16/2323")
+        invalidOrder.created = new Date(Date.now() - (4 * 24 * 60 * 60 * 1000)), 
         invalidOrder.total_price = null;
         return await request(app)
           .post(baseUrl)
@@ -301,13 +301,13 @@ function testOrders(app) {
     describe(`PUT ${baseUrl}/:uuid`, function() {      
       const resetSqlCommand = `
         UPDATE orders 
-        SET modified = '02/02/2323', 
+        SET modified = '2023-10-13 21:55:10', 
             status = 'Created', 
             total_price = 57.97,
             user_uuid = '${user4Uuid}'
         WHERE uuid = '${order2Uuid}';`;
       const testOrder = {                        
-        modified: new Date('03/12/23'),
+        modified: new Date(Date.now() - (3 * 24 * 60 * 60 * 1000)), 
         status: 'Shipped',
         total_price: 12.34,
         user_uuid: user3Uuid
@@ -399,7 +399,7 @@ function testOrders(app) {
 
     describe(`DELETE ${baseUrl}/:uuid`, function() {
       const toDelOrder = {
-        created: new Date("04/14/2323"),
+        created: new Date(Date.now() - (2 * 24 * 60 * 60 * 1000)), 
         total_price: 23.45,
         user_uuid: user1Uuid
       };

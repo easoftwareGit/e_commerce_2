@@ -174,65 +174,119 @@ async function insertOrdersItemsFromCartItems(orderUuid, cartUuid) {
  *  2) creates a new order row from cart
  *  3) inserts cart items into order items linked to new order
  *  4) removes items from cart
- *  5) removes cart
+ *  5) updates cart modified date
  *
  * @param {Object} cart
  * @return {Object} Object = 
- *    success: { status: 201, order: order data} 
+ *    success: { status: 201, order: order data } 
  *    err: { status:404, message: error message }
  */
 async function moveCartToOrder(cart) {
 
   try {
+    // get total price from cart
     const totalPrice = await cartQueries.getCartTotalPrice(cart.uuid);
-    if (totalPrice) {
-      // create new order from cart
-      const newOrder = await insertOrderFromCart(cart, totalPrice)
-      if (newOrder) {
-        const newOrderUuid = newOrder.uuid;
-        // move cart items into order items linking to new order
-        let insertedItemCount = await insertOrdersItemsFromCartItems(newOrderUuid, cart.uuid);
-        if (insertOrderFromCart) {
-          // delete cart items
-          const movedItemCount = await cartQueries.deleteCartItems(cart.uuid);
-          if (movedItemCount === insertedItemCount) {
-            // delete cart
-            const deleteResults = await cartQueries.deleteCart(cart.uuid);
-            if (deleteResults.rowCount === 1) {
-              return {
-                status: 201,
-                order: newOrder
-              }              
-            } else {
-              return {
-                status: 400,
-                message: 'could not remove cart'
-              }              
-            }
-          } else {
-            return {
-              status: 400,
-              message: 'wrong number of cart items removed'
-            }              
-          }
-        } else {
-          return {
-            status: 400,
-            message: 'could not move cart items into order items'
-          }                                
-        }
-      } else {
-        return {
-          status: 400,
-          message: 'could not create new order from cart'
-        }                                
+    if (!totalPrice) {
+      return {
+        status: 400,
+        message: 'Could not get total price from cart'
+      }
+    }
+    // create new order from cart
+    const newOrder = await insertOrderFromCart(cart, totalPrice)
+    if (!newOrder) {
+      return {
+        status: 400,
+        message: 'Could not create new order from cart'
+      }
+    }
+    // move cart items into order items linking to new order
+    const newOrderUuid = newOrder.uuid;
+    let insertedItemCount = await insertOrdersItemsFromCartItems(newOrderUuid, cart.uuid);
+    if (!insertOrderFromCart) {
+      return {
+        status: 400,
+        message: 'Could not move cart items into order items'
+      }
+    }
+    // delete cart items
+    const movedItemCount = await cartQueries.deleteCartItems(cart.uuid);
+    if (movedItemCount !== insertedItemCount) {
+      return {
+        status: 400,
+        message: 'Wrong number of cart items removed'
+      }              
+    }
+    // update modified date of cart
+    // no need to delete cart
+    const modified = new Date(Date.now());
+    const updatedCartResults = await cartQueries.updateCartModifiedDate(cart.uuid, modified);
+    if (updatedCartResults.status === 200) {
+      // even though updateCartModifiedDate returns status 200
+      // return 201 here because new order was created
+      return {
+        status: 201,
+        order: newOrder        
       }
     } else {
       return {
         status: 400,
-        message: 'could not get total price from cart'
-      }                                
-    }    
+        message: 'Could not update cart'
+      }
+    }
+
+    // if (totalPrice) {
+    //   // create new order from cart
+    //   const newOrder = await insertOrderFromCart(cart, totalPrice)
+    //   if (newOrder) {
+    //     const newOrderUuid = newOrder.uuid;
+    //     // move cart items into order items linking to new order
+    //     let insertedItemCount = await insertOrdersItemsFromCartItems(newOrderUuid, cart.uuid);
+    //     if (insertOrderFromCart) {
+    //       // delete cart items
+    //       const movedItemCount = await cartQueries.deleteCartItems(cart.uuid);
+    //       if (movedItemCount === insertedItemCount) {
+    //         // update modified date of cart
+    //         // no need to delete cart
+    //         const modified = new Date(Date.now());
+    //         const updatedCartResults = await cartQueries.updateCartModifiedDate(cart.uuid, modified);
+    //         if (updatedCartResults.status === 200) {
+    //           // even though updateCartModifiedDate returns status 200
+    //           // return 201 here because new order was created
+    //           return {
+    //             status: 201,
+    //             order: newOrder                
+    //           }
+    //         } else {
+    //           return {
+    //             status: 400,
+    //             message: 'could not updtae cart'
+    //           }
+    //         }
+    //       } else {
+    //         return {
+    //           status: 400,
+    //           message: 'wrong number of cart items removed'
+    //         }              
+    //       }
+    //     } else {
+    //       return {
+    //         status: 400,
+    //         message: 'could not move cart items into order items'
+    //       }                                
+    //     }
+    //   } else {
+    //     return {
+    //       status: 400,
+    //       message: 'could not create new order from cart'
+    //     }                                
+    //   }
+    // } else {
+    //   return {
+    //     status: 400,
+    //     message: 'could not get total price from cart'
+    //   }                                
+    // }    
   } catch (err) {
     throw Error(err);
   }

@@ -27,6 +27,7 @@ function testCheckout(app) {
     const testQuantity = 5;  
     const testPrice = (testQuantity * product1Price) + (testQuantity * product3Price) + (testQuantity * product4Price);
     const testDecPrice = (Math.round(testPrice * 100) / 100).toFixed(2);
+    // const testDecPrice = asMoney(testPrice);
     const testCartItems = [
       {
         product_uuid: product1Uuid,
@@ -62,8 +63,8 @@ function testCheckout(app) {
       let testOrder;      
       let testTotal;
       const testCart = {
-        created: new Date("05/15/2023"),
-        modified: new Date("05/15/2323"),
+        created: new Date(Date.now() - (7 * 24 * 60 * 60 * 1000)),
+        modified: new Date(Date.now() - (6 * 24 * 60 * 60 * 1000)),
         user_uuid: user2Uuid
       }
 
@@ -132,19 +133,27 @@ function testCheckout(app) {
         assert.equal(results, testCartItems.length)
       });
 
-      it('remove row from carts', async function() {
-        const results = await cartQueries.deleteCart(testCart.uuid); 
+      // it('remove row from carts', async function() {
+      //   const results = await cartQueries.deleteCart(testCart.uuid); 
+      //   assert.equal(results.status, 200);
+      //   assert.equal(results.rowCount, 1);
+      // });
+
+      it('update modified date in cart', async function () {
+        const modDate = new Date(Date.now());
+        const results = await cartQueries.updateCartModifiedDate(testCart.uuid, modDate);
         assert.equal(results.status, 200);
-        assert.equal(results.rowCount, 1);
-      });
+        const cart = results.cart;
+        assert.deepEqual(cart.modified, modDate);
+      })
     });
 
     describe('test orderQueries.moveCartToOrder()', function() {
       let testOrder;
       
       const testCart = {
-        created: new Date("05/15/2023"),
-        modified: new Date("05/15/2323"),
+        created: new Date(Date.now() - (5 * 24 * 60 * 60 * 1000)),
+        modified: new Date(Date.now() - (4 * 24 * 60 * 60 * 1000)),
         user_uuid: user2Uuid
       }
 
@@ -193,7 +202,7 @@ function testCheckout(app) {
       });
 
       it('get test cart', async function() {
-        const results = await cartQueries.getCart(testCart.uuid);
+        const results = await cartQueries.getCartByCartUuid(testCart.uuid);
         assert.equal(results.status, 200);
         const getCart = results.cart;
         // now compare - use deepEqual for dates        
@@ -218,26 +227,40 @@ function testCheckout(app) {
         assert.equal(response.body.length, testCartItems.length);
       });
 
-      it('test cart items no longer in cart_items table', function() {
-        return request(app)
+      it('test cart items no longer in cart_items table', async function() {
+        return await request(app)
           .get(`${baseUrl}/carts/${testCart.uuid}/items`)
           .expect(404);
       });
   
-      it('test cart no longer in carts table', function() {
-        return request(app)
+      // it('test cart no longer in carts table', function() {
+      //   return request(app)
+      //     .put(`${baseUrl}/carts/${testCart.uuid}`)
+      //     .send(testCart)
+      //     .expect(404)
+      // });     
+      
+      it('test cart modified date updated', async function() {        
+        const updatedCart = {
+          modified: new Date(Date.now())
+        }
+        const response = await request(app)
           .put(`${baseUrl}/carts/${testCart.uuid}`)
-          .send(testCart)
-          .expect(404)
-      });        
+          .send(updatedCart)
+          .expect(200)
+        // now compare - use deepEqual for dates
+        const putCart = response.body;       
+        putModified = new Date(putCart.modified);
+        assert.deepEqual(putModified, updatedCart.modified);        
+      })
     });
 
     describe(`POST ${baseUrl}/:uuid/checkout`, function() {
       let testOrder;
 
       const testCart = {
-        created: new Date("05/15/2023"),
-        modified: new Date("05/15/2323"),
+        created: new Date(Date.now() - (3 * 24 * 60 * 60 * 1000)),
+        modified: new Date(Date.now() - (2 * 24 * 60 * 60 * 1000)),
         user_uuid: user2Uuid
       }
 
@@ -303,18 +326,26 @@ function testCheckout(app) {
         assert.equal(response.body.length, testCartItems.length);
       });
 
-      it('test cart items no longer in cart_items table', function() {
-        return request(app)
+      it('test cart items no longer in cart_items table', async function() {
+        return await request(app)
           .get(`${baseUrl}/carts/${testCart.uuid}/items`)
           .expect(404);
       });
   
-      it('test cart no longer in carts table', function() {
-        return request(app)
-          .put(`${baseUrl}/carts/${testCart.uuid}`)
-          .send(testCart)
-          .expect(404)
-      });        
+      // it('test cart no longer in carts table', async function() {
+      //   return await request(app)
+      //     .put(`${baseUrl}/carts/${testCart.uuid}`)
+      //     .send(testCart)
+      //     .expect(404)
+      // });        
+
+      it('test cart has modified date', async function () {
+        const response = await request(app)
+          .get(`${baseUrl}/carts/cart/${testCart.uuid}`)
+          .expect(200)
+        const updatedCart = response.body;
+        expect(updatedCart.modified).to.not.be.null;
+      })
 
     });
 

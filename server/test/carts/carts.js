@@ -95,8 +95,8 @@ function testCarts(app) {
 
       before('insert test cart', async function() {
         const cart = {
-          created: new Date("06/26/2323"),
-          modified: new Date("06/26/2323"),    
+          created: new Date(Date.now() - (2 * 24 * 60 * 60 * 1000)),
+          modified: new Date(Date.now() - (2 * 24 * 60 * 60 * 1000)),
           user_uuid: testUserUuid
         };
         const sqlCommand = `
@@ -256,12 +256,12 @@ function testCarts(app) {
     describe(`POST ${baseUrl}`, function () {
       const userUuid = 'a24894ed-10c5-dd83-5d5c-bbfea7ac6dca';
       const newCart = {
-        created: new Date("05/29/2323"),
-        modified: new Date("05/29/2323"),    
+        created: new Date(Date.now() - (1 * 24 * 60 * 60 * 1000)),
+        modified: new Date(Date.now() - (1 * 24 * 60 * 60 * 1000)),    
         user_uuid: userUuid
       };
       const invalidCart = {
-        modified: new Date("05/29/2323"),    
+        modified: new Date(Date.now() - (1 * 24 * 60 * 60 * 1000)),   
         user_uuid: userUuid
       };
       const resetSqlCommand = `
@@ -319,14 +319,14 @@ function testCarts(app) {
       const user3Uuid = '516a1130-8398-3234-fc31-6e31fb695b85';   
       const resetSqlCommand = `
         UPDATE carts 
-        SET created = '01/03/2023', modified = '01/04/2023', user_uuid = '${user3Uuid}'
+        SET created = '2023-10-08 21:55:10', modified = '2023-10-09 21:55:10', user_uuid = '${user3Uuid}'
         WHERE uuid = '${cart2Uuid}';`;
-      // in testCart: make sure to set created to correct date in carts table
+
       const testCart = {                
-        created: new Date('01/03/23'),
-        modified: new Date('05/26/23'),
+        created: new Date('2023-10-11 21:55:10'),
+        modified: new Date('2023-10-12 21:55:10'),
         user_uuid: user3Uuid
-      };
+      };       
   
       describe(`Valid ${baseUrl}/:uuid`, function() {
 
@@ -347,12 +347,10 @@ function testCarts(app) {
             .send(updatedCart)
             .expect(200);
           const returnedCart = response.body;
-          // convert json date strings to dates
-          returnedCart.created = new Date(returnedCart.created);
+          // convert json date strings to dates          
           returnedCart.modified = new Date(returnedCart.modified);
           // now compare - use deepEqual for dates
-          assert.equal(returnedCart.uuid, cart2Uuid); 
-          assert.deepEqual(returnedCart.created, updatedCart.created);
+          assert.equal(returnedCart.uuid, cart2Uuid);           
           assert.deepEqual(returnedCart.modified, updatedCart.modified);
           assert.equal(returnedCart.user_uuid, updatedCart.user_uuid);
         });
@@ -375,7 +373,7 @@ function testCarts(app) {
         });        
 
         // other tests for missing data performed in POST tests        
-        it('did not PUT with with no modified date', async function() {
+        it('did not PUT with no modified date', async function() {
           const missingDataCart = Object.assign({}, testCart);
           missingDataCart.modified = null;
           return await request(app)
@@ -390,8 +388,8 @@ function testCarts(app) {
     describe(`DELETE ${baseUrl}/:uuid`, function() {
       const user2Uuid = '6714f724-f838-8f90-65a1-30359152dcdb'; 
       const toDelCart = {
-        created: new Date("06/26/2323"),
-        modified: new Date("06/26/2323"),    
+        created: new Date(Date.now() - (9 * 24 * 60 * 60 * 1000)),
+        modified: new Date(Date.now() - (9 * 24 * 60 * 60 * 1000)),    
         user_uuid: user2Uuid
       };
       const resetSqlCommand = `DELETE FROM carts WHERE user_uuid = '${user2Uuid}';`;

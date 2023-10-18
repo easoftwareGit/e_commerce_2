@@ -61,7 +61,7 @@ async function getCartByUserUuid(userUuid) {
 /**
  * returns all cart items for one cart
  *
- * @param {Integer} cartUuid - uuid code of cart with items to find
+ * @param {String} cartUuid - uuid code of cart with items to find
  * @return {Array|null} Array = objects of cart data; mull = user not found
  */
 async function getAllItemsForCart(cartUuid) {
@@ -88,7 +88,7 @@ async function getAllItemsForCart(cartUuid) {
 /**
  * gets the total price for all items on one cart
  *
- * @param {Integer} cartUuid - uuid code of cart with items to sum
+ * @param {String} cartUuid - uuid code of cart with items to sum
  * @return {Decimal} total price for all items in one cart
  */
 async function getCartTotalPrice(cartUuid) {
@@ -101,7 +101,7 @@ async function getCartTotalPrice(cartUuid) {
     const results = await db.query(sqlCommand, [cartUuid]);
     if (db.validResultsAtLeast1Row(results)) {
       const totalFloat = parseFloat(results.rows[0].price);      
-      const totalDecimal = (Math.round(totalFloat * 100) / 100).toFixed(2);
+      const totalDecimal = (Math.round(totalFloat * 100) / 100);      
       return totalDecimal;
     } else {
       return null;
@@ -153,7 +153,7 @@ async function deleteCart(cartUuid) {
 /**
  * deletes all cart items for one cart
  *
- * @param {Integer} cartUuid - uuid code of cart to with items to delete
+ * @param {String} cartUuid - uuid code of cart to with items to delete
  * @return {Integer|null} Integer = # of rows deleted; null = error deleteing
  */
 async function deleteCartItems(cartUuid) {
@@ -172,11 +172,44 @@ async function deleteCartItems(cartUuid) {
   }
 };
 
+/**
+ * updates the modified date in a cart 
+ *
+ * @param {String} cartUuid - uuid code of cart to with modified date to update
+ * @param {DateTime} modified - new modified date
+ * @return {object} - {status: query result code, cart: updated cart, message: error message}
+ */
+async function updateCartModifiedDate(cartUuid, modified) {
+  const rowValues = [modified, cartUuid];
+  const sqlCommand = `
+    UPDATE carts
+    SET modified = $1        
+    WHERE uuid = $2
+    RETURNING *;`;
+  try {
+    const results = await db.query(sqlCommand, rowValues);
+    if (db.validResultsAtLeast1Row(results)) {
+      return {
+        status: 200,
+        cart: results.rows[0]
+      }
+    } else {
+      return {
+        status: 404,
+        message: 'cart not found'
+      } 
+    };
+  } catch (err) {
+    throw Error(err)
+  }
+}
+
 module.exports = { 
   getCartByCartUuid,
   getCartByUserUuid,
   getAllItemsForCart,  
   getCartTotalPrice,  
   deleteCart, 
-  deleteCartItems
+  deleteCartItems,
+  updateCartModifiedDate
 }

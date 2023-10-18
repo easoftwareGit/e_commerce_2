@@ -27,7 +27,7 @@ cartsRouter.param('uuid', (req, res, next, uuid) => {
 cartsRouter.get('/', async (req, res) => {
 
   // GET request - get all carts
-  // path: localhost:5000/carts
+  // path: localhost:5000/api/carts
   // body: not used  
 
   const sqlCommand = `SELECT * FROM carts;`;  
@@ -46,11 +46,11 @@ cartsRouter.get('/', async (req, res) => {
 cartsRouter.get('/cart/:uuid', async (req, res) => {
 
   // GET request - get one cart by cart uuid
-  // path: localhost:5000/carts/cart/uuid
+  // path: localhost:5000/api/carts/cart/uuid
   //  where uuid is the uuid code for the cart
   // body: not used
 
-  try {
+  try { 
     const results = await cartQueries.getCartByCartUuid(req.uuid);
     if (results.status === 200) {
       res.status(200).json(results.cart);
@@ -65,7 +65,7 @@ cartsRouter.get('/cart/:uuid', async (req, res) => {
 cartsRouter.get('/user/:uuid', async (req, res) => {
 
   // GET request - get one cart by user uuid
-  // path: localhost:5000/carts/user/uuid
+  // path: localhost:5000/api/carts/user/uuid
   //  where uuid is the uuid code for the user
   // body: not used
 
@@ -84,7 +84,7 @@ cartsRouter.get('/user/:uuid', async (req, res) => {
 cartsRouter.post('/', async (req, res) => {
 
   // POST request
-  // path: localhost:5000/carts
+  // path: localhost:5000/api/carts
   // body: JSON object
   //  {
   //    created: new Date("01/28/2023"),
@@ -118,14 +118,54 @@ cartsRouter.post('/', async (req, res) => {
   }
 });
 
+
+cartsRouter.post('/fullcartrow', async (req, res) => {
+
+  // POST request
+  // path: localhost:5000/api/carts
+  // body: JSON object
+  //  {
+  //    uuid: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
+  //    created: new Date("01/28/2023"),
+  //    modified: new Date("01/28/2023"), 
+  //    user_id: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
+  //  }
+  
+  const { uuid, created, modified, user_uuid } = req.body;
+  const rowValues = [uuid, created, modified, user_uuid];
+  const sqlCommand = `
+    INSERT INTO carts (uuid, created, modified, user_uuid) 
+    VALUES ($1, $2, $3, $4) 
+    RETURNING *;`;
+  try {
+    const results = await db.query(sqlCommand, rowValues);
+    if (db.validResultsAtLeast1Row(results)) {      
+      res.status(201).json(results.rows[0]);      
+    } else {
+      res.status(404).json('Cart not inserted');
+    }    
+  } catch (err) {    
+    if (err.code === '23505') {
+      res.status(400).json('user_uuid already used');
+    } else if (err.code === '23502') {
+      res.status(400).json('required value missing');
+    } else if (err.code === '22008' && err.routine && err.routine === 'DateTimeParseError') {
+      res.status(400).json('invalid date format');
+    } else {
+      throw Error(err);
+    }    
+  }
+});
+
+
 cartsRouter.post('/:uuid/checkout', async (req, res) => {
 
   // POST request
-  // path: localhost:5000/carts/uuid/checkout
+  // path: localhost:5000/api/carts/uuid/checkout
   //  where uuid is the uuid code for the cart
   // body: JSON object
   //  {
-  //    id: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
+  //    uuid: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
   //    created: new Date("01/28/2023"),
   //    modified: new Date("01/28/2023"), (not required, will be set = created)
   //    user_id: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
@@ -147,7 +187,7 @@ cartsRouter.post('/:uuid/checkout', async (req, res) => {
 cartsRouter.put('/:uuid', async (req, res) => {
 
   // PUT request
-  // path: localhost:5000/carts/uuid
+  // path: localhost:5000/api/carts/uuid
   //  where uuid is the uuid code for the cart
   // body: JSON object
   //  {
@@ -157,22 +197,20 @@ cartsRouter.put('/:uuid', async (req, res) => {
   //  }
     
   const { modified } = req.body;
-  const rowValues = [modified, req.uuid];
-  const sqlCommand = `
-    UPDATE carts
-    SET modified = $1        
-    WHERE uuid = $2
-    RETURNING *;`;
   try {
-    const results = await db.query(sqlCommand, rowValues);
-    if (db.validResultsAtLeast1Row(results)) {
-      res.status(200).send(results.rows[0]);      
-    } else {      
+    const results = await cartQueries.updateCartModifiedDate(req.uuid, modified);
+    if (results.status === 200) {
+      res.status(200).send(results.cart)
+    } else {
       res.status(404).send(`Cart not found`);
-    };
-  } catch (err) {
-    if (err.code === '23505') {
-      res.status(400).json('user_uuid already used');
+    }
+  } catch (err) {  
+    if (!err.code) {      
+      if (err.message && err.message.includes('null value in column')) {
+        res.status(400).json('required value missing');
+      } else {
+        throw Error(err)
+      }
     } else if (err.code === '23502') {
       res.status(400).json('required value missing');
     } else if (err.code === '23503') {
@@ -186,7 +224,7 @@ cartsRouter.put('/:uuid', async (req, res) => {
 cartsRouter.delete('/:uuid', async (req, res) => {
 
   // DELETE request
-  // path: localhost:5000/carts/uuid
+  // path: localhost:5000/api/carts/uuid
   //  where uuid is the uuid code for the cart
   // body: not used
   
@@ -234,7 +272,7 @@ cartsRouter.param('itemUuid', (req, res, next, itemUuid) => {
 cartsRouter.get('/:uuid/items', async (req, res) => {
 
   // GET request
-  // path: localhost:5000/carts/#/items
+  // path: localhost:5000/api/carts/#/items
   //  where uuid is the uuid code for the cart
   // body: not used
 
@@ -253,7 +291,7 @@ cartsRouter.get('/:uuid/items', async (req, res) => {
 cartsRouter.get('/items/:itemUuid', async (req, res) => {
 
   // GET request
-  // path: localhost:5000/carts/uuid/items/itemUuid
+  // path: localhost:5000/api/carts/uuid/items/itemUuid
   //  where uuid is the uuid code for the cart, and itemUuid is the uuid code of the cart_item
   // body: not used
 
@@ -273,14 +311,14 @@ cartsRouter.get('/items/:itemUuid', async (req, res) => {
 cartsRouter.post('/:uuid/items', async (req, res) => {
 
   // POST request
-  // path: localhost:5000/carts/#/items
+  // path: localhost:5000/api/carts/uuid/items
   //  where uuid is the uuid code for the cart
   // body: JSON object
   //  {
   //    product_uuid: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
   //    quantity: 2
   //  }
-    
+
   const { product_uuid, quantity } = req.body;
   const rowValues = [req.uuid, product_uuid, quantity];
   const sqlCommand = `
@@ -307,7 +345,7 @@ cartsRouter.post('/:uuid/items', async (req, res) => {
 cartsRouter.put('/items/:itemUuid', async (req, res) => {
 
   // PUT request
-  // path: localhost:5000/carts/uuid/items/itemUuid
+  // path: localhost:5000/api/carts/uuid/items/itemUuid
   //  where uuid is the uuid code for the cart, and itemUuid is the uuid code of the cart item
   // body: JSON object
   //  {
@@ -344,7 +382,7 @@ cartsRouter.put('/items/:itemUuid', async (req, res) => {
 cartsRouter.delete('/items/:itemUuid', async (req, res) => {
 
   // DELETE request
-  // path: localhost:5000/carts/#
+  // path: localhost:5000/api/carts/#
   //  where itemUuid is the uuid code for the cart item
   // body: not used
     
@@ -364,7 +402,7 @@ cartsRouter.delete('/items/:itemUuid', async (req, res) => {
 cartsRouter.delete('/:uuid/allItems', async (req, res) => {
 
   // DELETE request
-  // path: localhost:5000/carts/#
+  // path: localhost:5000/api/carts/#
   //  where uuid is the uuid code for the cart
   // body: not used
     

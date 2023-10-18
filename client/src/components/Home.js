@@ -9,8 +9,8 @@ const Home = (props) => {
 
   return (
     <div>
-      <h2>Home</h2>
-      <p>Welcome to our website!</p>
+      <p className="h2 m-2">Home</p>
+      <p className="h5 m-2">Welcome to our website!</p>
     </div>
   );
 };

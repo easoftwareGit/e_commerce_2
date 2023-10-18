@@ -43,11 +43,13 @@ const authRouter = require('./routes/auth');
 const productsRouter = require('./routes/products');
 const cartsRouter = require('./routes/carts');
 const ordersRouter = require('./routes/orders');
+const paymentsRouter = require('./routes/payments')
 app.use(`${baseUrl}/users`, usersRouter);
 app.use(`${baseUrl}/auth`, authRouter);
 app.use(`${baseUrl}/products`, productsRouter);
 app.use(`${baseUrl}/carts`, cartsRouter);
 app.use(`${baseUrl}/orders`, ordersRouter);
+app.use(`${baseUrl}/payments`, paymentsRouter);
 
 // google router call back
 app.get('/google/callback',
