@@ -11,7 +11,7 @@ const app = require('../index');
 // const testCartItems = require('./carts/cartItems');
 // const testOrders = require('./orders/orders');
 // const testOrderItems = require('./orders/orderItems');
-const testCheckout = require('./checkout/checkout');
+// const testCheckout = require('./checkout/checkout');
 // const testPayments = require('./payments/payments');
 
 // dropAll(app);
@@ -22,5 +22,7 @@ const testCheckout = require('./checkout/checkout');
 // testCartItems(app);
 // testOrders(app);
 // testOrderItems(app);
-testCheckout(app);
+// testCheckout(app);
 // testPayments(app);
+
+

@@ -118,7 +118,6 @@ cartsRouter.post('/', async (req, res) => {
   }
 });
 
-
 cartsRouter.post('/fullcartrow', async (req, res) => {
 
   // POST request
@@ -156,7 +155,6 @@ cartsRouter.post('/fullcartrow', async (req, res) => {
     }    
   }
 });
-
 
 cartsRouter.post('/:uuid/checkout', async (req, res) => {
 

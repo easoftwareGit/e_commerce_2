@@ -1,89 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { formatter, asMoney } from '../../tools/tools';
+import { formatter } from '../../tools/tools';
 import { fetchUserOrders } from '../../store/orders/ordersSlice';
+import { fetchUserOrderItems } from '../../store/orders/orderItemsSlice';
 
 const OrderHistory = () => {
-
-  const orderData = [
-    {
-      id: 1,
-      modified: new Date("02/22/2023"),
-      status: 'Shipped',
-      total_price: asMoney(81.46)
-    },
-    {
-      id: 2,
-      modified: new Date("03/13/2023"),
-      status: 'Shipped',
-      total_price: asMoney(577.69)
-    },
-    {
-      id: 3,
-      modified: new Date("10/01/2023"),
-      status: 'Pending',
-      total_price: asMoney(1249.50)
-    },
-  ]
-
-  const itemsData = [
-    {
-      id: 1,
-      orderId: 1,
-      item: 'STIG',
-      price: asMoney(12.34),
-      quantity: 1,
-      total: asMoney(12.34)
-    },
-    {
-      id: 2,
-      orderId: 1,
-      item: 'BRIMNES',
-      price: asMoney(34.56),
-      quantity: 2,
-      total: asMoney(69.12)
-    },
-    {
-      id: 3,
-      orderId: 2,
-      item: 'EKET',
-      price: asMoney(56.78),
-      quantity: 4,
-      total: asMoney(227.12)
-    },
-    {
-      id: 4,
-      orderId: 2,
-      item: 'IVAR',
-      price: asMoney(123.45),
-      quantity: 1,
-      total: asMoney(350.57)
-    },
-    {
-      id: 5,
-      orderId: 3,
-      item: 'INGOLF',
-      price: asMoney(99.95),
-      quantity: 6,
-      total: asMoney(599.70)
-    },
-    {
-      id: 6,
-      orderId: 3,
-      item: 'FRANKLIN',
-      price: asMoney(49.95),
-      quantity: 3,
-      total: asMoney(149.85)
-    },
-    {
-      id: 7,
-      orderId: 3,
-      item: 'FLINTAN',
-      price: asMoney(499.95),
-      quantity: 1,
-      total: asMoney(499.95)
-    },
-  ]
 
   const dispatch = useDispatch();
   const user = useSelector((state) => state.user);
@@ -93,18 +14,24 @@ const OrderHistory = () => {
       dispatch(fetchUserOrders(user.data.uuid))
     }
   }, [])
+  const orderItems = useSelector((state) => state.orderItems);
+  useEffect(() => {
+    if (user.data.uuid) {
+      dispatch(fetchUserOrderItems(user.data.uuid))
+    }
+  }, [])
 
   const initPluses = [];
-  orderData.forEach(order => {
+  orders.data.forEach(order => {
     initPluses.push({
-      id: order.id,
+      uuid: order.uuid,
       showPlus: true
     });
   });
   const [showChildren, setShowChildren] = useState(initPluses)
 
-  const childButtonClass = (orderId) => {
-    const showChild = showChildren.find((child) => child.id === orderId);
+  const childButtonClass = (orderUuid) => {
+    const showChild = showChildren.find((child) => child.uuid === orderUuid);
     if (showChild) {
       if (showChild.showPlus) {
         return 'btn btn-success'
@@ -116,8 +43,8 @@ const OrderHistory = () => {
     }
   }
 
-  const childButtonText = (orderId) => {
-    const showChild = showChildren.find((child) => child.id === orderId);
+  const childButtonText = (orderUuid) => {
+    const showChild = showChildren.find((child) => child.uuid === orderUuid);
     if (showChild) {
       if (showChild.showPlus) {
         return '+'
@@ -129,9 +56,9 @@ const OrderHistory = () => {
     }
   }
 
-  const handleClick = (orderId) => {
+  const handleClick = (orderUuid) => {
     setShowChildren(showChildren.map(child => {
-      if (child.id === orderId) {
+      if (child.uuid === orderUuid) {
         return {
           ...child,
           showPlus: !child.showPlus
@@ -146,7 +73,7 @@ const OrderHistory = () => {
   return (
     <div>
       <h2 className='mb-3'>Check Out</h2>
-      <table className='table table-hover'>
+      <table className='table table-hover table-bordered'>
         <thead>
           <tr>
             <th scope='col' className='w-25'></th>
@@ -155,15 +82,19 @@ const OrderHistory = () => {
             <th scope='col' className='w-25 text-end'>Total</th>
           </tr>          
         </thead>
-        <tbody>
-          {orderData.map(order => (  
+        <tbody className="table-group-divider">
+          {orders.data.map(order => (  
             <>
-              <tr key={order.id}>
+              <tr key={order.uuid}>
                 <td className='text-center'>                
                   <button
                     type='button'                  
                     className={childButtonClass(order.id)}
                     onClick={() => handleClick(order.id)}
+                    data-bs-toggle="collapse"
+                    data-bs-target={`#${order.uuid}`}
+                    aria-expanded="false"
+                    aria-controls={order.uuid}
                   >
                     {childButtonText(order.id)}
                   </button>
@@ -172,7 +103,7 @@ const OrderHistory = () => {
                 <td className='align-middle'>{order.status}</td>
                 <td className='text-end align-middle'>{formatter.format(order.total_price)}</td>              
               </tr>            
-              <tr>
+              <tr class="collapse multi-collapse" id={order.uuid}>                
                 <td colSpan={4}>
                   <table className='table table-hover'>
                     <thead>
@@ -184,11 +115,17 @@ const OrderHistory = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {itemsData.map(item => (
-                        { }
-                        // {item.orderId === order.id ? (
-                        //   <tr></tr>
-                        // ) : null}
+                      {orderItems.data.map(item => (
+                        <> 
+                          {item.order_uuid === order.uuid ? (
+                            <tr key={item.uuid}>
+                              <td>{item.name}</td>
+                              <td className='text-end'>{formatter.format(item.price_unit)}</td>
+                              <td className='text-center'>{item.quantity}</td>
+                              <td className='text-end'>{formatter.format(item.item_total)}</td>
+                            </tr>
+                          ) : null}
+                        </>                        
                       ))}
                     </tbody>
                   </table>
@@ -198,31 +135,6 @@ const OrderHistory = () => {
           ))}
         </tbody>
       </table>
-      {/* <p>
-        <a class="btn btn-primary" data-bs-toggle="collapse" href="#multiCollapseExample1" role="button" aria-expanded="false" aria-controls="multiCollapseExample1">Toggle first element</a>
-        <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#multiCollapseExample2" aria-expanded="false" aria-controls="multiCollapseExample2">Toggle second element</button>
-        <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target=".multi-collapse" aria-expanded="false" aria-controls="multiCollapseExample1 multiCollapseExample2">Toggle both elements</button>
-      </p>
-      <div class="row">
-        <div class="col">
-          <div class="collapse multi-collapse" id="multiCollapseExample1">
-            <div class="card card-body">
-              Some placeholder content for the first collapse component of this multi-collapse example. This panel is hidden by default but revealed when the user activates the relevant trigger.
-            </div>
-          </div>
-        </div>
-        <div class="col">
-          <div class="collapse multi-collapse" id="multiCollapseExample2">
-            <div class="card card-body">
-              Some placeholder content for the second collapse component of this multi-collapse example. This panel is hidden by default but revealed when the user activates the relevant trigger.
-            </div>
-          </div>
-        </div>
-      </div>       
-
-
-      */}
-
     </div>
   );
 };

@@ -198,6 +198,11 @@ const Cart = props => {
                 </tr>
               </tfoot>              
             </table>
+          </div>        
+        // empty cart
+        ) : (!cart.loading && cart.data && !cartItems.loading && cartItems.data && cartItems.data.length===0) ? (          
+          <div className="empty_cart">
+            <p className="h5 m-2">Your cart is empty</p>
           </div>
         ) : null}
       </form>  

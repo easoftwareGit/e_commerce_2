@@ -21,6 +21,7 @@ function testOrders(app) {
 
   describe(`${baseUrl} routes`, function () {
     const user1Uuid = '5bcefb5d-314f-ff1f-f5da-6521a2fa7bde';       // uuid of user #1
+    const user2Uuid = '6714f724-f838-8f90-65a1-30359152dcdb';       // uuid of user #2
     const user3Uuid = '516a1130-8398-3234-fc31-6e31fb695b85';       // uuid of user #3
     const user4Uuid = '5735c309-d480-3236-62da-31e13c35b91e';       // uuid of user #4
     const user5Uuid = 'a24894ed-10c5-dd83-5d5c-bbfea7ac6dca';       // uuid of user #5
@@ -207,11 +208,63 @@ function testOrders(app) {
           .expect(404);
       });
 
-      it('called with an invalid formatted uuid returns a 404 error', function() {
+      it('called with an non existing uuid returns a 404 error', function() {
         return request(app)
           .get(`${baseUrl}/${nonexistingUuid}`)
           .expect(404);
       });
+    })
+
+    describe(`GET ${baseUrl}/user/:uuid`, function () {
+      
+      it('returns an array of objects', async function() {
+        const response = await request(app)
+          .get(`${baseUrl}/user/${user2Uuid}`)
+          .expect(200);
+        const orders = response.body;
+        expect(orders).to.be.an.instanceOf(Array);
+        expect(orders[0]).to.be.an.instanceOf(Object);
+      });
+
+      it('returns an array of objects for user', async function () {
+        const numOrdersUser2 = 2
+        const response = await request(app)
+          .get(`${baseUrl}/user/${user2Uuid}`)
+          .expect(200);
+        const orders = response.body;    
+        assert.equal(orders.length, numOrdersUser2);
+        orders.forEach(order => {
+          assert.equal(order.user_uuid, user2Uuid);
+        });
+      })
+
+      it('returns full order object', async function() {
+        const response = await request(app)
+          .get(`${baseUrl}/user/${user2Uuid}`)
+          .expect(200);
+        const orders = response.body;
+        expect(orders[0]).to.have.ownProperty('uuid');
+        expect(orders[0]).to.have.ownProperty('created');
+        expect(orders[0]).to.have.ownProperty('modified');
+        expect(orders[0]).to.have.ownProperty('status');
+        expect(orders[0]).to.have.ownProperty('total_price');
+        expect(orders[0]).to.have.ownProperty('user_uuid');
+      });
+
+      it('called with an invalid formatted uuid returns a 404 error', function() {
+        return request(app)
+        .get(`${baseUrl}/user/ABC`)
+          .expect(404);
+      });
+
+      it('called with an non existing uuid returns an empty array', async function () {
+        const response = await request(app)
+          .get(`${baseUrl}/user/${nonexistingUuid}`)
+          .expect(200);
+        const orders = response.body;
+        assert.equal(orders.length, 0);
+      });
+
     })
 
     describe(`POST ${baseUrl}`, function() {

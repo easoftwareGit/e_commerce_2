@@ -234,69 +234,45 @@ async function moveCartToOrder(cart) {
         message: 'Could not update cart'
       }
     }
-
-    // if (totalPrice) {
-    //   // create new order from cart
-    //   const newOrder = await insertOrderFromCart(cart, totalPrice)
-    //   if (newOrder) {
-    //     const newOrderUuid = newOrder.uuid;
-    //     // move cart items into order items linking to new order
-    //     let insertedItemCount = await insertOrdersItemsFromCartItems(newOrderUuid, cart.uuid);
-    //     if (insertOrderFromCart) {
-    //       // delete cart items
-    //       const movedItemCount = await cartQueries.deleteCartItems(cart.uuid);
-    //       if (movedItemCount === insertedItemCount) {
-    //         // update modified date of cart
-    //         // no need to delete cart
-    //         const modified = new Date(Date.now());
-    //         const updatedCartResults = await cartQueries.updateCartModifiedDate(cart.uuid, modified);
-    //         if (updatedCartResults.status === 200) {
-    //           // even though updateCartModifiedDate returns status 200
-    //           // return 201 here because new order was created
-    //           return {
-    //             status: 201,
-    //             order: newOrder                
-    //           }
-    //         } else {
-    //           return {
-    //             status: 400,
-    //             message: 'could not updtae cart'
-    //           }
-    //         }
-    //       } else {
-    //         return {
-    //           status: 400,
-    //           message: 'wrong number of cart items removed'
-    //         }              
-    //       }
-    //     } else {
-    //       return {
-    //         status: 400,
-    //         message: 'could not move cart items into order items'
-    //       }                                
-    //     }
-    //   } else {
-    //     return {
-    //       status: 400,
-    //       message: 'could not create new order from cart'
-    //     }                                
-    //   }
-    // } else {
-    //   return {
-    //     status: 400,
-    //     message: 'could not get total price from cart'
-    //   }                                
-    // }    
   } catch (err) {
     throw Error(err);
   }
 }
- 
+
+
+/**
+ * gets all order items for a user for all user's orders
+ *
+ * @param {String} userUuid - uuid code for user
+ * @return {Array|null} Array = objects of order items data; mull = no data found for user
+ */
+async function getOrderItemsForUser(userUuid) {
+  const sqlCommand = `
+    SELECT order_items.uuid, order_items.order_uuid, order_items.product_uuid,
+          quantity, price_unit,
+          (quantity * products.price) AS item_total, products.name	     
+    FROM order_items
+    INNER JOIN products ON (products.uuid = order_items.product_uuid)
+    INNER JOIN orders ON (orders.uuid = order_items.order_uuid)
+    WHERE (orders.user_uuid = $1)`;
+  try {
+    const results = await db.query(sqlCommand, [userUuid]);
+    if (db.validResultsAtLeast1Row(results)) {
+      return results.rows;
+    } else {
+      return null;
+    }    
+  } catch (err) {
+    throw Error(err);
+  }    
+}
+
 module.exports = {
   createNewOrder,
   createOrderItem,
   createOrderItems,
   insertOrderFromCart,
   insertOrdersItemsFromCartItems,
-  moveCartToOrder
+  moveCartToOrder,
+  getOrderItemsForUser
 }

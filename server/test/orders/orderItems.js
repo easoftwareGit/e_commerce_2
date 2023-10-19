@@ -33,6 +33,8 @@ function testOrderItems(app) {
     const product2Price = 995.95;
     const product4Price = 69.99;
     const nonexistingUuid = '56d916ec-e6b5-0e62-9330-0248c6792317';
+    const user2Order1uuid = 'a15ef4dd-da90-40c4-b2e3-da8711e79060';
+    const user2Order2uuid = '5ed9672d-7356-42b8-94d1-2b6bf9cc812c';
 
     describe('setup order_items table', function() {
 
@@ -162,7 +164,7 @@ function testOrderItems(app) {
       let testOrderUuid;          
       const testQuantity = 5;
       const resetOrderItemsSqlCommand = `DELETE FROM order_items WHERE quantity = ${testQuantity};`;
-      const resetOrdersSqlCommand = `DELETE FROM orders WHERE user_uuid = '${user2Uuid}'`;
+      const resetOrdersSqlCommand = `DELETE FROM orders WHERE user_uuid = '${user1Uuid}'`;
 
       before('before delete test order items, reset order items from prior tests', async function() {        
         await db.query(resetOrderItemsSqlCommand);
@@ -178,7 +180,7 @@ function testOrderItems(app) {
           modified: new Date("03/13/2023"),    
           status: 'Created',
           total_price: 39.97,
-          user_uuid: user2Uuid
+          user_uuid: user1Uuid
         };
         const sqlCommand = `
           INSERT INTO orders (created, modified, status, total_price, user_uuid) 
@@ -302,7 +304,7 @@ function testOrderItems(app) {
 
     });
 
-    describe(`GET ${baseUrl}/items/:itemUuid`, function() {            
+    describe(`GET ${baseUrl}/items/:itemUuid`, function () {      
 
       it('returns a single order_item object', async function() {
         const response = await request(app)
@@ -345,6 +347,55 @@ function testOrderItems(app) {
           .expect(404);
       });
     });
+
+    describe(`GET ${baseUrl}/items/user/:uuid`, function () {
+      
+      it('returns an array of order_items objects', async function () {
+        const response = await request(app)
+          .get(`${baseUrl}/items/user/${user2Uuid}`)
+          .expect(200);
+        const items = response.body;
+        expect(items).to.be.an.instanceOf(Array);
+        expect(items[0]).to.be.an.instanceOf(Object);
+      });
+
+      it('returns full order_item objects', async function() {
+        const response = await request(app)
+          .get(`${baseUrl}/items/user/${user2Uuid}`)
+          .expect(200);
+        const items = response.body;
+        expect(items[0]).to.have.ownProperty('uuid');
+        expect(items[0]).to.have.ownProperty('order_uuid');
+        expect(items[0]).to.have.ownProperty('product_uuid');
+        expect(items[0]).to.have.ownProperty('quantity');
+        expect(items[0]).to.have.ownProperty('price_unit');
+      });
+
+      it('returned order_items with the correct uuids', async function() {
+        const response = await request(app)
+          .get(`${baseUrl}/items/user/${user2Uuid}`)
+          .expect(200);
+        const items = response.body;
+        items.forEach(item => {
+          expect(item.order_uuid).to.be.oneOf([user2Order1uuid, user2Order2uuid]);
+        });        
+      });
+
+      it('called with an invalid formatted uuid returns a 404 error', function() {
+        return request(app)
+          .get(`${baseUrl}/items/user/ABC`)
+          .expect(404);
+      });
+
+      it('called with an non existing uuid returns an empty array', async function () {
+        const response = await request(app)
+          .get(`${baseUrl}/user/${nonexistingUuid}`)
+          .expect(200);
+        const items = response.body;
+        assert.equal(items.length, 0);
+      });
+
+    })
 
     describe(`POST ${baseUrl}/:uuid/items`, function() {                  
       const testQuantity = 5

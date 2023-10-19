@@ -6,6 +6,7 @@ const {
   usersKeyColName
 } = require('../myConsts');
 
+const user2Uuid = '6714f724-f838-8f90-65a1-30359152dcdb';  // uuid for user #2
 const user3Uuid = '516a1130-8398-3234-fc31-6e31fb695b85';  // uuid for user #3
 const user4Uuid = '5735c309-d480-3236-62da-31e13c35b91e';  // uuid for user #4
 
@@ -25,7 +26,23 @@ const orders = [
     status: 'Created',
     total_price: 57.97,
     user_uuid: user4Uuid
-  }
+  },
+  {
+    uuid: 'a15ef4dd-da90-40c4-b2e3-da8711e79060',
+    created: new Date('2023-10-13 22:51:29.717-07'), 
+    modified: new Date('2023-10-14 22:51:29.717-07'), 
+    status: 'Shipped',
+    total_price: 2245,
+    user_uuid: user2Uuid
+  },
+  {
+    uuid: '5ed9672d-7356-42b8-94d1-2b6bf9cc812c',
+    created: new Date('2023-10-15 22:51:29.717-07'), 
+    modified: new Date('2023-10-16 22:51:29.717-07'), 
+    status: 'Created',
+    total_price: 1095,
+    user_uuid: user2Uuid
+  },
 ];
 
 const orderCount = orders.length;

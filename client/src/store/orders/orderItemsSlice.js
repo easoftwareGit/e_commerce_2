@@ -9,17 +9,17 @@ const initialState = {
   error: '',
 }
 
-export const fetchUserOrders = createAsyncThunk('orders/fetchOrders', async (user_uuid) => {
+export const fetchUserOrderItems = createAsyncThunk('orderItems/fetchUserOrderItems', async (user_uuid) => {
   try {
     const response = await axios({
       method: 'get',
       withCredentials: true,
-      url: `${baseApi}/orders/user/${user_uuid}`,
+      url: `${baseApi}/orders/items/user/${user_uuid}`,
     });
     if (response.status === 200 && response.data) {
       return response.data; // response.data is already JSON'ed
     } else {
-      console.log('Fetch Orders - Non error return, but not status 200');
+      console.log('Fetch Order Items - Non error return, but not status 200');
       return [];
     }
   } catch (err) {
@@ -27,25 +27,25 @@ export const fetchUserOrders = createAsyncThunk('orders/fetchOrders', async (use
   }
 });
 
-export const ordersSlice = createSlice({
-  name: 'orders',
+export const ordersItemsSlice = createSlice({
+  name: 'orderItems',
   initialState: initialState,
   reducers: { },  
   extraReducers: (builder) => {
-    builder.addCase(fetchUserOrders.pending, (state) => {
+    builder.addCase(fetchUserOrderItems.pending, (state) => {
       state.loading = true; 
       state.error = '';
     })
-    builder.addCase(fetchUserOrders.fulfilled, (state, action) => {
+    builder.addCase(fetchUserOrderItems.fulfilled, (state, action) => {
       state.loading = false;      
       state.data = action.payload;
       state.error = '';
     })
-    builder.addCase(fetchUserOrders.rejected, (state, action) => {      
+    builder.addCase(fetchUserOrderItems.rejected, (state, action) => {      
       state.loading = false;
       state.error = action.error.message;
     })
   }
 });
 
-export default ordersSlice.reducer;
+export default ordersItemsSlice.reducer;

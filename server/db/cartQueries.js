@@ -62,7 +62,7 @@ async function getCartByUserUuid(userUuid) {
  * returns all cart items for one cart
  *
  * @param {String} cartUuid - uuid code of cart with items to find
- * @return {Array|null} Array = objects of cart data; mull = user not found
+ * @return {Array|null} Array = objects of cart data; mull = no data found for user
  */
 async function getAllItemsForCart(cartUuid) {
   const sqlCommand = `

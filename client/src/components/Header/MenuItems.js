@@ -25,7 +25,7 @@ const MenuItems = [
     id: orderHistoryId,
     active: false,
     visible: true,
-    href: "/orderhistory",
+    href: "/order/history",
     linkText: "Order History"
   },
   {

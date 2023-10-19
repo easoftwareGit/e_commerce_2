@@ -13,10 +13,7 @@ const baseUrl = `${process.env.BASEURL}`;
 function testCheckout(app) {
 
   describe(`${baseUrl}/carts/:uuid/checkout route and it's queries`, function() {
-    const user1Uuid = '5bcefb5d-314f-ff1f-f5da-6521a2fa7bde';       // uuid of user #1
-    const user2Uuid = '6714f724-f838-8f90-65a1-30359152dcdb';       // uuid of user #2
-    const order1Uuid = 'bbdedc95-c697-147e-5232-a23b2d5a4aa4';      // uuid of order #1
-    const orderItem2Uuid = 'e6710ea9-f1b4-8a55-0989-612ba83879a5'   // uuid of order item #2
+    const user5Uuid = 'a24894ed-10c5-dd83-5d5c-bbfea7ac6dca';       // uuid of user #5    
     const product1Uuid = 'fd99387c-33d9-c78a-ba29-0286576ddce5';    // uuid of product #1    
     const product3Uuid = 'd9b1af94-4d49-41f6-5b2d-2d4ac160cdea';    // uuid of product #3
     const product4Uuid = '467e51d7-1659-d2e4-12cb-c64a0d19ecb4';    // uuid of product #4
@@ -48,13 +45,13 @@ function testCheckout(app) {
 
     const delTestOrderSqlCommand = `
       DELETE FROM orders
-      WHERE user_uuid = '${user2Uuid}';`;
+      WHERE uuid = '${user5Uuid}';`;
     const delTestOrderItemsSqlCommand = `
       DELETE FROM order_items
       WHERE quantity = ${testQuantity};`
     const delTestCartSqlCommand = `
       DELETE FROM carts
-      WHERE user_uuid = '${user2Uuid}';`;
+      WHERE user_uuid = '${user5Uuid}';`;
     const delTestCartItemsSqlCommand = `
       DELETE FROM cart_items
       WHERE quantity = ${testQuantity};`
@@ -65,7 +62,7 @@ function testCheckout(app) {
       const testCart = {
         created: new Date(Date.now() - (7 * 24 * 60 * 60 * 1000)),
         modified: new Date(Date.now() - (6 * 24 * 60 * 60 * 1000)),
-        user_uuid: user2Uuid
+        user_uuid: user5Uuid
       }
 
       before('before test move cart to order components, remove data from prior test', async function() {        
@@ -154,7 +151,7 @@ function testCheckout(app) {
       const testCart = {
         created: new Date(Date.now() - (5 * 24 * 60 * 60 * 1000)),
         modified: new Date(Date.now() - (4 * 24 * 60 * 60 * 1000)),
-        user_uuid: user2Uuid
+        user_uuid: user5Uuid
       }
 
       before('before test move cart to order components, remove data from prior test', async function() {        
@@ -217,7 +214,7 @@ function testCheckout(app) {
         assert.equal(results.status, 201);
         testOrder = results.order;
         assert.equal(testOrder.total_price, testDecPrice);
-        assert.equal(testOrder.user_uuid, user2Uuid);  
+        assert.equal(testOrder.user_uuid, user5Uuid);  
       });
 
       it('correct number of new order items', async function() {
@@ -261,7 +258,7 @@ function testCheckout(app) {
       const testCart = {
         created: new Date(Date.now() - (3 * 24 * 60 * 60 * 1000)),
         modified: new Date(Date.now() - (2 * 24 * 60 * 60 * 1000)),
-        user_uuid: user2Uuid
+        user_uuid: user5Uuid
       }
 
       before(`before test POST ${baseUrl}/:uuid/checkout, remove data from prior test`, async function() {        
@@ -316,7 +313,7 @@ function testCheckout(app) {
           .expect(201);
         testOrder = response.body;
         assert.equal(testOrder.total_price, testDecPrice);  
-        assert.equal(testOrder.user_uuid, user2Uuid);  
+        assert.equal(testOrder.user_uuid, user5Uuid);  
       });
 
       it('correct number of new order items', async function() {

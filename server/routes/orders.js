@@ -69,7 +69,11 @@ ordersRouter.get('/user/:uuid', async (req, res) => {
   //  where uuid is the uuid code for the user
   // body: not used
 
-  const sqlCommand = `SELECT * FROM orders WHERE user_uuid = $1`;
+  const sqlCommand = `
+    SELECT *
+    FROM orders
+    WHERE user_uuid = $1
+    ORDER BY created ASC`;
   try {
     const results = await db.query(sqlCommand, [req.uuid]); 
     if (db.validResultsAtLeast1Row(results) || results.rows.length === 0) {  
@@ -222,6 +226,25 @@ ordersRouter.get('/:uuid/items', async (req, res) => {
     } else {        
       res.status(404).json('Order items not found');
     }    
+  } catch (err) {
+    throw Error(err);
+  }
+});
+
+ordersRouter.get('/items/user/:uuid', async (req, res) => {
+
+  // GET request
+  // path: localhost:5000/api/orders/items/user/#
+  //  where uuid is the uuid code for the user
+  // body: not used
+
+  try {
+    const results = await orderQueries.getOrderItemsForUser(req.uuid);
+    if (results) {
+      res.status(200).json(results);
+    } else {
+      res.status(404).json('Order items not found');
+    }
   } catch (err) {
     throw Error(err);
   }
