@@ -856,29 +856,6 @@ paths:
                   "$ref": "#/components/schemas/Order_items"
         '404':
           description: Invalid Cart Uuid supplied, Cart not found
-  "/api/orders/{uuid}/allitems":
-    delete:
-      tags:
-      - order items
-      summary: Delete all order item for an order
-      description: 'Delete all order item for an order, used only by admin and testing.'
-      operationId: deleteOrderItemsForOrder
-      parameters:
-      - name: uuid
-        in: path
-        description: 'The order uuid for order items that need to be deleted.'
-        required: true
-        schema:
-          type: string
-      responses:
-        '200':
-          description: Deleted order - order uuid returned as a string
-          content:
-            text/plain: 
-              schema:
-                type: string
-        '404':
-          description: Order item not found, invalid order item uuid
   "/api/orders/items/user/{uuid}":
     get:
       tags:
@@ -904,7 +881,7 @@ paths:
                   "$ref": "#/components/schemas/Order_items"
         '404':
           description: Invalid User Uuid supplied, Cart Items not found
-  "/api/orders/items/{itemUuid}":
+  "/api/orders/item/{itemUuid}"
     get:
       tags:
       - order items
@@ -934,7 +911,7 @@ paths:
       description: 'Put order item by order item uuid, used only by admin and testing.'
       operationId: getOrderItemByOrderId
       parameters:
-      - name: itemUuid
+      - name: ItsmUuid
         in: path
         description: 'The order item uuid for order items to be updated.'
         required: true
@@ -957,7 +934,7 @@ paths:
         "$ref": "#/components/requestBodies/OrderItemsPut"
     delete:
       tags:
-      - order items
+      - orders
       summary: Delete order item
       description: 'Delete order item, used only by admin and testing.'
       operationId: deleteOrderItem
@@ -970,7 +947,7 @@ paths:
           type: string
       responses:
         '200':
-          description: Deleted order item - order item's uuid returned as a string
+          description: Deleted order item - order item's id returned as a string
           content:
             text/plain: 
               schema:
@@ -1148,19 +1125,16 @@ components:
               used_uuid:
                 type: string
     OrderItemsPut:
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              product_uuid:
-                type: string
-              quantity:
-                type: integer
-                format: int32
-              price_unit:
-                type: number
-                format: Decimal
+      type: object
+      properties:
+        product_uuid:
+          type: string
+        quantity:
+          type: integer
+          format: int32
+        price_unit:
+          type: number
+          format: Decimal
     OrdersPost:
       content:
         application/json:
