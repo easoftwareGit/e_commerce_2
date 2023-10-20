@@ -129,6 +129,8 @@ cartsRouter.post('/fullcartrow', async (req, res) => {
   //    modified: new Date("01/28/2023"), 
   //    user_id: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
   //  }
+  //  
+  // note: used for testing
   
   const { uuid, created, modified, user_uuid } = req.body;
   const rowValues = [uuid, created, modified, user_uuid];
@@ -306,10 +308,10 @@ cartsRouter.get('/items/:itemUuid', async (req, res) => {
   }
 });
 
-cartsRouter.post('/:uuid/items', async (req, res) => {
+cartsRouter.post('/:uuid/items', async (req, res) => {  
 
   // POST request
-  // path: localhost:5000/api/carts/uuid/items
+  // path: localhost:5000/api/carts/items/uuid
   //  where uuid is the uuid code for the cart
   // body: JSON object
   //  {

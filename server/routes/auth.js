@@ -151,6 +151,10 @@ authRouter.get('/user', (req, res) => {
 });
 
 // GOOGLE log in
+// GET request - gets the currenly logged in user
+// path: localhost:5000/auth/user
+// body: not used
+// this path uses passport LocalStrategy (see main index.js)
 
 authRouter.get('/google',
   passport.authenticate('google', { scope: ['email', 'profile'] })

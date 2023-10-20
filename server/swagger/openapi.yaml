@@ -1,0 +1,1225 @@
+---
+openapi: 3.0.0
+servers:
+- url: http://localhost:5000
+info:
+  description: 'This is a sample E-Commerce 2.0 app. This project requires that you build a fully-functioning e-commerce application REST API that allows users to perform various CRUD operations such as registering an account, browsing products for sale, etc.'
+  version: 2.0.0
+  title: E-Commerce 2.0 REST API application
+  termsOfService: https://www.codecademy.com/about
+  contact:
+    email: easoftware@gmail.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+tags:
+- name: E-Commerce 2.0 
+  description: Sample E-Commerce app 
+- name: users
+  description: Operations about users
+- name: auth
+  description: Operations about authorization
+- name: products
+  description: Operations about products
+- name: carts
+  description: Operations about carts
+- name: cart items
+  description: Operations about carts items
+- name: orders
+  description: Operations about orders
+- name: order items
+  description: Operations about order items
+paths:
+  "/api/users":
+    post:
+      tags:
+      - users
+      summary: Create user
+      description: This is only for testing. To create a user, post to /api/auth/register.
+      operationId: createUser
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Users"
+        '400':
+          description: email already used, required value missing
+        '404':
+          description: user not inserted
+      requestBody:
+        "$ref": "#/components/requestBodies/UsersPostPut"
+    get:
+      tags:
+      - users
+      summary: Gets all users
+      description: ''
+      operationId: getAllUsers
+      responses:
+        '200':
+          description: successful opertion
+          content:
+            application/json:
+              schema: 
+                type: array
+                items: 
+                  "$ref": "#/components/schemas/Users"  
+        '404':
+          description: 'no user rows found'
+  "/api/users/google":
+    post:
+      tags:
+      - users
+      summary: Create Google user
+      description: Only used in testing
+      operationId: createGoogleUser
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Users"
+        '400':
+          description: email already used, required value missing
+        '404':
+          description: user not inserted
+      requestBody:
+        "$ref": "#/components/requestBodies/UsersPostPut"
+  "/users/{uuid}":
+    get:
+      tags:
+      - users
+      summary: Get user by user uuid
+      description: ''
+      operationId: getUserByUuid
+      parameters:
+      - name: uuid
+        in: path
+        description: 'The user uuid that needs to be fetched. Use "6714f724-f838-8f90-65a1-30359152dcdb" for testing. '
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Users"
+        '404':
+          description: Invalid User Uuid supplied, User not found
+    put:
+      tags:
+      - users
+      summary: update user by user uuid
+      description: 'This can only be done by the logged in user.'
+      operationId: updateUserByUuid
+      parameters:
+      - name: uuid
+        in: path
+        description: 'The uuid of user that needs to be updated. Use "6714f724-f838-8f90-65a1-30359152dcdb" for testing.'
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Users"
+        '400':
+          description: email already used, required value missing
+        '404':
+          description: Invalid User Uuid supplied, User not found
+      requestBody:
+        "$ref": "#/components/requestBodies/UsersPostPut"
+    delete:
+      tags:
+      - users
+      summary: Delete user
+      description: This can only be done by the logged in user.
+      operationId: deleteUser
+      parameters:
+      - name: uuid
+        in: path
+        description: 'The uuid of the user that needs to be deleted. In testing, use before() to generate user to delete.'
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Deleted user - user's uuid returned as a string
+          content:
+            text/plain: 
+              schema:
+                type: string
+        '404':
+          description: User not found
+        '409':
+          description: Cannot delete - constraint error
+  "/auth/register":
+    post:
+      tags:
+      - auth
+      summary: registers user
+      description: ''
+      operationId: registerUser
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Users"
+        '409': 
+          description: email already in use
+        '500': 
+          description: could not create user
+      requestBody:
+        "$ref": "#/components/requestBodies/AuthRegister"
+  "/auth/login":
+    post:
+      tags:
+      - auth
+      summary: logs in user
+      description: Uses passort and passport-local strategy to log in user
+      operationId: loginUser
+      responses:
+        '200':
+          description: logged in user - user's id returned as a string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+      requestBody:
+        "$ref": "#/components/requestBodies/AuthLogin"
+  "/auth/logout":
+    get:
+      tags:
+      - auth
+      summary: logs out user
+      description: 'Uses passort and passport-local strategy to log out user'
+      operationId: logoutUser
+      responses:
+        '205':
+          description: successful opertion
+        '404':
+          description: 'error'
+  "/auth/is_logged_in":
+    get:
+      tags:
+      - auth
+      summary: checks if user is logged in
+      description: 'checks server to see if user is logged in'
+      operationId: isLoggedIn
+      responses:
+        '200':
+          description: successful opertion
+        '404':
+          description: 'error, suer not logged in'
+  "/auth/user":
+    get:
+      tags:
+      - auth
+      summary: gets logged in user
+      description: 'gets logged in user using passort and passport-local strategy'
+      operationId: getLoggedInUser
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Users"
+        '404':
+          description: 'no user logged in'
+  "/auth/google":
+    get:
+      tags:
+      - auth
+      summary: 'logs in user using Google account'
+      description: 'logs in user using OAuth 2 and Google account'
+      operationId: loginUserGoogle
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Users"
+        '404':
+          description: 'error'
+  "/products":
+    post:
+      tags:
+      - products
+      summary: Create product
+      description: Can only be done by admin
+      operationId: createProduct
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Products"
+        '400': 
+          description: 'name already used, model_number already used, required value missing'
+        '404':
+          description: Product not inserted
+      requestBody:
+        "$ref": "#/components/requestBodies/Products"
+    get:
+      tags:
+      - products
+      summary: Get all products
+      description: Can be done by anyone, even when not logged in
+      operationId: getProducts
+      responses:
+        '200':
+          description: successful opertion
+          content:
+            application/json:
+              schema: 
+                type: array
+                items: 
+                  "$ref": "#/components/schemas/Products"  
+        '404':
+          description: 'no product rows found'
+  "/products/{uuid}":  
+    get:
+      tags:
+      - products
+      summary: get procuct by product uuid
+      description: ''
+      operationId: getProductByUuid
+      parameters:
+      - name: uuid
+        in: path
+        description: 'The product uuid that needs to be fetched'
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Products"
+        '404':
+          description: Invalid Product Uuid supplied, Product not found
+    put:
+      tags:
+      - products
+      summary: update product by product uuid
+      description: Can only be done by admin
+      operationId: updateProductByUuid
+      parameters:
+      - name: uuid
+        in: path
+        description: 'The product uuid that needs to be updated.'
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Products"
+        '400':
+          description: name already used, model_number already used, required value missing
+        '404':
+          description: Invalid Product Uuid supplied, Product not found
+      requestBody:
+        "$ref": "#/components/requestBodies/Products"
+    delete:
+      tags:
+      - products
+      summary: Delete product
+      description: Can only be done by admin
+      operationId: deleteProduct
+      parameters:
+      - name: uuid
+        in: path
+        description: 'The product uuid that needs to be deleted.'
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Deleted product - product's uuid returned as a string
+          content:
+            text/plain: 
+              schema:
+                type: string
+        '404':
+          description: Product not found
+        '409':
+          description: Cannot delete - constraint error
+  "/carts":
+    post:
+      tags:
+      - carts
+      summary: Create cart
+      description: 'If non-exiatant, done by the app when the user selects a product to purchare.'
+      operationId: createCart
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Carts"
+        '400':
+          description: user_uuid already used, required value missing
+        '404':
+          description: cart not inserted
+        '409':
+          description: user_uuid violates foreign key constraint
+      requestBody:
+        "$ref": "#/components/requestBodies/CartsPost"
+    get:
+      tags:
+      - carts
+      summary: Gets all carts
+      description: 'Only done by admin'
+      operationId: getAllCarts
+      responses:
+        '200':
+          description: successful opertion (No cart rows is OK, array is empty)
+          content:
+            application/json:
+              schema: 
+                type: array
+                items: 
+                  "$ref": "#/components/schemas/Carts"
+  "/carts/{uuid}":
+    put:
+      tags:
+      - carts
+      summary: Update cart by cart uuid
+      description: ''
+      operationId: updateCartByUuid
+      parameters:
+      - name: uuid
+        in: path
+        description: 'The uuid of the cart that needs to be updated.'
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Carts"
+        '404':
+          description: Invalid Cart Uuid supplied, Cart not found
+      requestBody:
+        "$ref": "#/components/requestBodies/CartsPut"
+    delete:
+      tags:
+      - carts
+      summary: Delete cart
+      description: This can only be done by the Admin.
+      operationId: deleteCart
+      parameters:
+      - name: uuid
+        in: path
+        description: 'The cart id that needs to be deleted.'
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Deleted cart - cart's id returned as a string
+          content:
+            text/plain: 
+              schema:
+                type: string
+        '400': 
+          description: unknown error
+        '404':
+          description: Cart not found
+        '409':
+          description: Cannot delete - constraint error
+  "/carts/{uuid}/allitems":          
+    delete:
+      tags:
+      - cart items
+      summary: Delete all items in a cart
+      description: 'Used in the checkout process, when the user has paid for the order, moving cart items to order items.'
+      operationId: cartDeleteAllItems
+      parameters:
+      - name: uuid
+        in: path
+        description: 'The cart uuid that that is checking out.'
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Deleted all items - cart's uuid returned 
+          content:
+            text/plain: 
+              schema:
+                type: string
+        '404':
+          description: Cannot delete
+  "/carts/{uuid}/checkout":
+    post:
+      tags:
+      - carts
+      summary: Check out operation for cart
+      description: 'Starts whole checkout opertation: Payment, move items from cart and cart_items to orders and order_items.'
+      operationId: cartCheckout
+      parameters:
+      - name: uuid
+        in: path
+        description: 'The cart uuid that that is checking out.'
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: successful opertion 
+          content:
+            application/json:
+              schema: 
+                type: array
+                items: 
+                  "$ref": "#/components/schemas/Orders"
+      requestBody:
+        "$ref": "#/components/requestBodies/FullCartsPost"
+  "/carts/{uuid}/items":
+    post:
+      tags:
+      - cart items
+      summary: Create cart item
+      description: 'Done by the app when the user selects a product to purchare.'
+      operationId: createCartItem
+      parameters:
+      - name: uuid
+        in: path
+        description: 'The uuid of the cart, the cart item is being added to.'
+        required: true
+        schema:
+          type: string
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Cart_items"
+        '400':
+          description: user_uuid already used, required value missing
+        '404':
+          description: cart not inserted
+        '409':
+          description: user_uuid violates foreign key constraint
+      requestBody:
+        "$ref": "#/components/requestBodies/CartItemsPost"
+    get:
+      tags:
+      - cart items
+      summary: Gets all items for a cart
+      description: 'Done by app when user requests cart'
+      operationId: getCartItems
+      parameters:
+      - name: uuid
+        in: path
+        description: 'The uuid of the cart.'
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: successful opertion 
+          content:
+            application/json:
+              schema: 
+                type: array
+                items: 
+                  "$ref": "#/components/schemas/Carts"
+  "/carts/cart/{uuid}":
+    get:
+      tags:
+      - carts
+      summary: Get cart by cart uuid
+      description: 'Gets the cart by cart uuid'
+      operationId: getCartByCartUuid
+      parameters:
+      - name: uuid
+        in: path
+        description: 'The cart uuid that needs to be fetched.'
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Carts"
+        '404':
+          description: Invalid Cart Uuid supplied, Cart not found
+  "/carts/items/{itemUuid}":
+    get:
+      tags:
+      - cart items
+      summary: Get cart items by cart item uuid
+      description: 'Gets the cart item by cart item uuid'
+      operationId: getCartItemByCartItemUuid
+      parameters:
+      - name: itemUuid
+        in: path
+        description: 'The cart item uuid that needs to be fetched.'
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Cart_items"
+        '404':
+          description: Invalid Cart Item Uuid supplied, Cart Item not found
+    put:
+      tags:
+      - cart items
+      summary: Update cart item by cart item uuid
+      description: 'Updates quantity and modified coumns in cart item row, by cart item id'
+      operationId: updateCartItemByUuid
+      parameters:
+      - name: itemUuid
+        in: path
+        description: 'The uuid of the cart items that needs to be updated.'
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Cart_items"
+        '404':
+          description: Invalid Cart Uuid supplied, Cart not found
+      requestBody:
+        "$ref": "#/components/requestBodies/CartItemsPut"
+    delete:
+      tags:
+      - cart items
+      summary: Delete cart item
+      description: 'Delete cart item when user makes quantity 0'
+      operationId: deleteCartItem
+      parameters:
+      - name: itemUuid
+        in: path
+        description: 'The cart item uuid that needs to be deleted.'
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Deleted cart item - cart item's uuid returned as a string
+          content:
+            text/plain: 
+              schema:
+                type: string
+        '404':
+          description: Cart Item not found
+        '409':
+          description: Cannot delete - constraint error
+  "/carts/user/{uuid}":
+    get:
+      tags:
+      - carts
+      summary: Get cart by user uuid
+      description: 'Gets the cart by user uuid'
+      operationId: getCartByUserUuid
+      parameters:
+      - name: uuid
+        in: path
+        description: 'The user uuid oft he cart that needs to be fetched.'
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Carts"
+        '404':
+          description: Invalid Cart Uuid supplied, Cart not found
+  "/carts/fullcartrow":
+    post:
+      tags:
+      - carts
+      summary: Posts a cart row
+      description: 'Posts a row to the carts table. Only used in testing'
+      operationId: postFullCartRow
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Carts"
+        '400':
+          description: user_uuid already used, required value missing
+        '404':
+          description: cart not inserted
+        '409':
+          description: user_uuid violates foreign key constraint
+      requestBody:
+        "$ref": "#/components/requestBodies/FullCartsPost"
+  "/orders":
+    post:
+      tags:
+      - orders
+      summary: Create order
+      description: 'Done by the user'
+      operationId: createOrder
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Orders"
+        '400':
+          description: required value missing, invalid data
+        '409':
+          description: order_id or product_id violates foreign key constraint
+      requestBody:
+        "$ref": "#/components/requestBodies/OrdersPost"
+    get:
+      tags:
+      - orders
+      summary: Gets all orders
+      description: ''
+      operationId: getAllOrders
+      responses:
+        '200':
+          description: successful opertion (No orders rows is OK, array is empty)
+          content:
+            application/json:
+              schema: 
+                type: array
+                items: 
+                  "$ref": "#/components/schemas/Orders"
+  "/orders/{id}":  
+    get:
+      tags:
+      - orders
+      summary: Get order by order id
+      description: ''
+      operationId: getOrderById
+      parameters:
+      - name: id
+        in: path
+        description: 'The order id that needs to be fetched. Use 2 for testing. '
+        required: true
+        schema:
+          type: integer
+          minimum: 1
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Orders"
+        '404':
+          description: Invalid Order ID supplied, Order not found
+    put:
+      tags:
+      - orders
+      summary: update order by order id
+      description: 'This can only be done by the logged in user.'
+      operationId: updateOrderById
+      parameters:
+      - name: id
+        in: path
+        description: 'The order id of the order that needs to be updated. Use 2 for testing. '
+        required: true
+        schema:
+          type: integer
+          minimum: 1
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Orders"
+        '400':
+          description: required value missing
+        '404':
+          description: Invalid Order ID supplied, Order not found
+        '409':
+          description: user_id violates foreign key constraint
+      requestBody:
+        "$ref": "#/components/requestBodies/OrdersPut"
+    delete:
+      tags:
+      - orders
+      summary: Delete order
+      description: This can only be done by the app or Admin.
+      operationId: deleteOrder
+      parameters:
+      - name: id
+        in: path
+        description: 'The order id that needs to be deleted. In testing, use before() to generate cart to delete.'
+        required: true
+        schema:
+          type: integer
+          minimum: 1
+      responses:
+        '200':
+          description: Deleted order - order's id returned as a string
+          content:
+            text/plain: 
+              schema:
+                type: string
+        '400': 
+          description: unknown error
+        '404':
+          description: Order not found
+        '409':
+          description: Cannot delete - constraint error          
+  "/orders/{id}/items":
+    post:
+      tags:
+      - orders
+      summary: Create order item
+      description: 'Done when user checks out.'
+      operationId: createOrderItem
+      parameters:
+      - name: id
+        in: path
+        description: 'The order id link the order item. Use 1 for testing. '
+        required: true
+        schema:
+          type: integer
+          minimum: 1
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Order_items"
+        '400':
+          description: product id not valid, required value missing
+        '404':
+          description: order not found
+        '409':
+          description: order_id or product_id violates foreign key constraint
+      requestBody:
+        "$ref": "#/components/requestBodies/CartItemsPost"
+    get:
+      tags:
+      - orders
+      summary: Get order items by order id
+      description: ''
+      operationId: getOrderItemsById
+      parameters:
+      - name: id
+        in: path
+        description: 'The order id for items to be fetched. Use 1 for testing.'
+        required: true
+        schema:
+          type: integer
+          minimum: 1
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema: 
+                type: array
+                items: 
+                  "$ref": "#/components/schemas/Order_items"
+        '404':
+          description: Invalid Cart ID supplied, Cart not found
+  "/orders/items/{itemId}":
+    get:
+      tags:
+      - orders
+      summary: Get order item by order item id
+      description: ''
+      operationId: getOrderItemById
+      parameters:
+      - name: itemId
+        in: path
+        description: 'The order item id that needs to be fetched. Use 2 for testing. '
+        required: true
+        schema:
+          type: integer
+          minimum: 1
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Order_items"
+        '404':
+          description: Invalid Order Item ID supplied, order item not found
+    put:
+      tags:
+      - orders
+      summary: Get order item by order item id
+      description: ''
+      operationId: getOrderItemByOrderId
+      parameters:
+      - name: itemId
+        in: path
+        description: 'The order item id for items to be fetched. Use 2 for testing.'
+        required: true
+        schema:
+          type: integer
+          minimum: 1
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Order_items"
+        '400':
+          description: product id not valid, required value missing
+        '404':
+          description: Invalid Order Item ID supplied, Order Item not found
+        '409':
+          description: product_id violates foreign key constraint
+      requestBody:
+        "$ref": "#/components/requestBodies/CartItemsPut"
+    delete:
+      tags:
+      - orders
+      summary: Delete order item
+      description: Done by the user
+      operationId: deleteOrderItem
+      parameters:
+      - name: itemId
+        in: path
+        description: 'The order item id that needs to be deleted. In testing, use before() to generate order item to delete.'
+        required: true
+        schema:
+          type: integer
+          minimum: 1
+      responses:
+        '200':
+          description: Deleted order item - order item's id returned as a string
+          content:
+            text/plain: 
+              schema:
+                type: string
+        '404':
+          description: Order item not found, invalid order item id
+components:
+  schemas:
+    Carts:
+      type: object
+      properties:
+        uuid:
+          type: string
+        created:
+          type: string
+          format: date-time
+        modified:
+          type: string
+          format: date-time
+        used_uuid:
+          type: string
+    Cart_items:
+      type: object
+      properties:
+        uuid:
+          type: string
+        cart_uuid:
+          type: string
+        product_uuid:
+          type: string
+        quantity:
+          type: integer
+          format: int32
+    Products:
+      type: object
+      properties:
+        uuid:
+          type: string
+        name:
+          type: string
+        category:
+          type: string
+        price:
+          type: number
+          format: Decimal
+        description:
+          type: string
+        designer:
+          type: string
+    Orders:
+      type: object
+      properties:
+        uuid:
+          type: string
+        created:
+          type: string
+          format: date-time
+        modified:
+          type: string
+          format: date-time
+        status:
+          type: string
+        total_price:
+          type: number
+          format: Decimal
+        user_uuid:
+          type: string
+    Order_items:
+      type: object
+      properties:
+        uuid:
+          type: string
+        order_uuid:
+          type: string
+        product_uuid:
+          type: string
+        quantity:
+          type: integer
+          format: int32
+        price_unit:
+          type: number
+          format: Decimal
+    Users:
+      type: object
+      properties:
+        uuid:
+          type: string
+        email:
+          type: string
+          format: email
+        password_hash:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        phone:
+          type: string
+        google:
+          type: integer
+          format: int32
+      xml:
+        name: User
+  requestBodies:
+    CartItemsPost:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              product_uuid:
+                type: string
+              quantity:
+                type: integer
+                format: int32
+    CartItemsPut:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              quantity:
+                type: integer
+                format: int32
+    Carts:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              uuid:
+                type: string
+              created:
+                type: string
+                format: date-time
+              modified:
+                type: string
+                format: date-time
+              used_uuid:
+                type: string
+    CartsPost:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              created:
+                type: string
+                format: date-time
+              used_uuid:
+                type: string
+    CartsPut:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              quantity:
+                type: string
+                format: date-time
+    FullCartsPost:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              uuid: 
+                type: string
+              created:
+                type: string
+                format: date-time
+              modified:
+                type: string
+                format: date-time
+              used_uuid:
+                type: string
+    OrdersPost:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              created:
+                type: string
+                format: date-time
+              total_price:
+                type: number
+                format: Decimal
+              used_uuid:
+                type: string
+    OrdersPut:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              modified:
+                type: string
+                format: date-time
+              status:
+                type: string
+              total_price:
+                type: number
+                format: Decimal
+              used_uuid:
+                type: string
+    ProductArray:
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              "$ref": "#/components/schemas/Products"
+      description: List of product object
+      required: true
+    Products:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+              category:
+                type: string
+              price:
+                type: number
+                format: Decimal
+              description:
+                type: string
+              designer:
+                type: string
+    UsersArray:
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              "$ref": "#/components/schemas/Users"
+      description: List of user object
+      required: true
+    UsersPostPut:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              email:
+                type: string
+              password_hash:
+                type: string
+              first_name:
+                type: string
+              last_name:
+                type: string
+              phone:
+                type: string
+              google:
+                type: integer
+                format: int32
+      description: 'Note: password_hash is sent. This is only ised for testing'
+      required: true
+    AuthRegister:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              email:
+                type: string
+              password:
+                type: string
+              first_name:
+                type: string
+              last_name:
+                type: string
+              phone:
+                type: string
+      description: 'Note: password is sent in plaintext, and password_hash is in Response'
+      required: true
+    AuthLogin:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              email:
+                type: string
+              password:
+                type: string
+      description: 'Note: password is sent in plaintext'
+      required: true
